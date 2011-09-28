@@ -143,8 +143,8 @@ var srcjs = (function() {
 			}
 			div.text(text);
 			
-			if (console.children().size() > 100) {
-				console.children().filter(':lt(50)').remove();
+			if (console.children().size() > 1000) {
+				console.children().filter(':lt(100)').remove();
 			}
 			console.append(div);
 			console.scrollTop(console[0].scrollHeight);

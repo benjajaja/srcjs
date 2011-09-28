@@ -50,7 +50,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 					
 					socket.on('start', function () {
 						start(options.process, options.pidFilename, function() {
-							socket.emit('started');
+							io.sockets.in('all').volatile.emit('started');
 						});
 					});
 					socket.on('stop', stop);
