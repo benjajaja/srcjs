@@ -91,7 +91,7 @@ html, body {
 }
 
 
-#console {
+#srcjsConsole {
 	width: 100%;
 	border: none;
 	margin: 0;
@@ -105,28 +105,28 @@ html, body {
 	overflow: auto;
 	overflow-y: scroll;
 }
-	#console div {
+	#srcjsConsole div {
 		white-space: pre;
 		color: #81F7F3;
 	}
-		#console div.error {
+		#srcjsConsole div.error {
 			color: #faa;
 		}
-		#console div.system {
+		#srcjsConsole div.system {
 			color: #2EFE2E;
 		}
-		#console div.warning {
+		#srcjsConsole div.warning {
 			color: #F7FE2E;
 			font-weight: bold;
 		}
-	#console::-webkit-scrollbar {
+	#srcjsConsole::-webkit-scrollbar {
 		width: 10px;
 		height: 12px;
 	}
-	#console::-webkit-scrollbar-track {
+	#srcjsConsole::-webkit-scrollbar-track {
 		background-color: #000;
 	}
-	#console::-webkit-scrollbar-thumb {
+	#srcjsConsole::-webkit-scrollbar-thumb {
 		border-radius: 10px;
 		background: rgba(255,255,255,0.75);
 		margin: 0 1px;
@@ -215,6 +215,10 @@ html, body {
 	.srcjsControl {
 		padding: 2px 0;
 	}
+		.srcjsProcessControl, .srcjsAppControl {
+			display: inline;
+			margin-right: 10px;
+		}
 	.srcjsInput {
 	}
 		.srcjsInputWrapper {
@@ -234,7 +238,7 @@ html, body {
 			font-family: 'Droid Sans Mono', sans-serif;
 			background-color: transparent;
 		}
-		#btnInput {
+		#srcjsBtnInput {
 			width: 32px;
 			height: 32px;
 			float: right;

@@ -18,7 +18,7 @@
 		<fieldset>
 			<label>
 				Username:
-				<input type="text" name="username" id="srcjsLoginUsername"/>
+				<input type="text" name="username" id="srcjsLoginUsername" autofocus/>
 			</label>
 			<label>
 				Password:
@@ -31,15 +31,20 @@
 	
 	<div id="srcjsInterface">
 		<div class="srcjsControl">
-			<button id="btnStart" disabled>Start</button>
-			<button id="btnStop" disabled>Stop</button>
+			<div class="srcjsProcessControl">
+				<button id="srcjsBtnStart" disabled>Start</button>
+				<button id="srcjsBtnStop" disabled>Stop</button>
+			</div>
+			<div class="srcjsAppControl">
+				<button id="srcjsBtnHUP">HUP</button>
+			</div>
 		</div>
-		<div id="console" readonly></div>
+		<div id="srcjsConsole"></div>
 
 		<div class="srcjsInput">
-			<button id="btnInput" disabled>&#8629;</button>
+			<button id="srcjsBtnInput" disabled>&#8629;</button>
 			<div class="srcjsInputWrapper">
-				<input id="input" autocomplete="off"/>
+				<input id="input" placeholder="command" title="Use arrow up and down keys to go back through history" autocomplete="off"/>
 			</div>
 		</div>
 		<h5>&copy; 2011 Benjamin "GipsyKing" Grosse</h5>

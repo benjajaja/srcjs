@@ -1,23 +1,28 @@
-$(document).ready(function() {
-	var socket = io.connect();
-	socket.on('connected', function (status) {
-		$('#srcjsLoginButton').attr('disabled', null);
-		$('#srcjsLogin').submit(function() {
-			srcjs.login(socket, $('#srcjsLoginUsername').val(), $('#srcjsLoginPassword').val(), function(error, serverStatus) {
-				if (error) {
-					alert(error);
-				} else {
-					$('#srcjsLogin').hide();
-					$('#srcjsInterface').show();
-					srcjs.init(socket, serverStatus);
-				}
+if (typeof window.jQuery == 'undefined') {
+	alert('Please add jquery in public/ folder! Look at this page\'s source for path.');
+	
+} else {
+	$(document).ready(function() {
+		var socket = io.connect();
+		socket.on('connected', function (status) {
+			$('#srcjsLoginButton').attr('disabled', null);
+			$('#srcjsLogin').submit(function() {
+				srcjs.login(socket, $('#srcjsLoginUsername').val(), $('#srcjsLoginPassword').val(), function(error, serverStatus) {
+					if (error) {
+						alert(error);
+					} else {
+						$('#srcjsLogin').hide();
+						$('#srcjsInterface').show();
+						srcjs.init(socket, serverStatus);
+					}
+				});
 			});
 		});
+		
+		
+		
 	});
-	
-	
-	
-});
+}
 
 var srcjs = (function() {
 	function makeEnum(array) {
@@ -76,16 +81,20 @@ var srcjs = (function() {
 			
 			srcjs.onStatus(status);
 			
-			$('#btnStart').click(function() {
+			$('#srcjsBtnStart').click(function() {
 				srcjs.start(socket);
 			});
 			
-			$('#btnStop').click(function() {
+			$('#srcjsBtnStop').click(function() {
 				srcjs.stop(socket);
 			});
 			
-			$('#btnInput').click(function() {
+			$('#srcjsBtnInput').click(function() {
 				srcjs.input(socket);
+			});
+			
+			$('#srcjsBtnHUP').click(function() {
+				srcjs.sigHUP(socket);
 			});
 			
 			$('#input').keyup(function(e) {
@@ -116,6 +125,10 @@ var srcjs = (function() {
 			}
 		},
 		
+		sigHUP: function(socket) {
+			socket.emit('HUP');
+		},
+		
 		onStarted: function() {
 			srcjs.onStatus(Status.STARTED);
 		},
@@ -128,8 +141,8 @@ var srcjs = (function() {
 				div = $('<div/>');
 			}
 			div.text(text);
-			$('#console').append(div);
-			$('#console').scrollTop($('#console')[0].scrollHeight);
+			$('#srcjsConsole').append(div);
+			$('#srcjsConsole').scrollTop($('#srcjsConsole')[0].scrollHeight);
 		},
 		
 		onStdout: function(data) {
@@ -147,13 +160,13 @@ var srcjs = (function() {
 		
 		onStatus: function(status) {
 			if (status == Status.STOPPED) {
-				$('#btnStart').attr('disabled', null);
-				$('#btnStop').attr('disabled', 'disabled');
-				$('#btnInput').attr('disabled', 'disabled');
+				$('#srcjsBtnStart').attr('disabled', null);
+				$('#srcjsBtnStop').attr('disabled', 'disabled');
+				$('#srcjsBtnInput').attr('disabled', 'disabled');
 			} else {
-				$('#btnStart').attr('disabled', 'disabled');
-				$('#btnStop').attr('disabled', null);
-				$('#btnInput').attr('disabled', null);
+				$('#srcjsBtnStart').attr('disabled', 'disabled');
+				$('#srcjsBtnStop').attr('disabled', null);
+				$('#srcjsBtnInput').attr('disabled', null);
 			}
 		},
 		

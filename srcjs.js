@@ -1,6 +1,6 @@
 // let's quickly setup an express server. srcds/srcds.js handles socket.io and the game server.
-var app = require('express').createServer();
 var fs = require('fs');
+var app = require('express').createServer();
 
 app.configure(function(){
 	app.use(app.router);
@@ -18,7 +18,7 @@ app.post('/ignoreme', function (req, res) {
 
 /* Example config.json:
 {
-        "port": 80,
+        "port": 80, // this happens to be here so you can use it to configure your webserver conveniently in one place
         "process": {
                 "chdir": "../orangebox", // execute command in this dir
                 "command": "./srcds_run",
@@ -29,14 +29,15 @@ app.post('/ignoreme', function (req, res) {
         "pidFilename": "proc.pid"
 }
 */
-fs.readFile('config.json', function(err, options) {
-	if (err) throw err;
-
-	options = JSON.parse(options.toString())
+var srcjs = require('./srcjs/srcjs')('config.json', function(port) {
 	
-	app.listen(options.port);
-	console.log('express started on port '+options.port);
+	app.listen(port);
+	console.log('express started on port '+port);
 	
-	require('./srcjs/srcjs')(app, options);
+	srcjs.start(app);
 	
 });
+
+
+
+

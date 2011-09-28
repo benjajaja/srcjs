@@ -1,7 +1,10 @@
-module.exports = function(app, options) {
+var fs = require('fs');
+var options, configFilename;
+
+var start = function(app) {
 	var io = require('socket.io').listen(app);
 	var cp = require('child_process');
-	var fs = require('fs');
+	
 	var unixlib = require('unixlib');
 	
 	var warnings = {
@@ -9,6 +12,7 @@ module.exports = function(app, options) {
 PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 (If you don\'t restart, the game server will continue running, but you will not be able to send commands or see output)',
 		incorrectLogin: 'Incorrect username or password',
+		sigHUPExecuted: 'Configuration reloaded, restart server if you changed command or arguments'
 	};
 
 	var proc = null;
@@ -44,12 +48,14 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 							socket.emit('started');
 						});
 					});
-					socket.on('stop', function () {
-						stop();
+					socket.on('stop', stop);
+					socket.on('input', input);
+					socket.on('HUP', function() {
+						HUP(function() {
+							socket.emit('warn', warnings.sigHUPExecuted);
+						});
 					});
-					socket.on('input', function (string) {
-						input(string);
-					});
+					
 					socket.on('disconnect', function () {
 						// this is especially bad (thread safety?)
 						sockets.splice(sockets.indexOf(socket), 1);
@@ -94,9 +100,28 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		for(var i = 0, ilen = sockets.length; i < ilen; i++) {
 			sockets[i].emit('exit', code);
 		}
+		proc.removeAllListeners('exit');
+		proc.stdout.removeAllListeners('data');
+		proc.stderr.removeAllListeners('data');
 		proc = null;
-		clearInterval(procInterval);
-		procInterval = null;
+		clearProcInterval();
+	};
+	
+	var setProcInputInterval = function(interval) {
+		// if we don't send anything to proc's stdin, it seems to stop producing
+		// stdout (at least with source games)
+		if (proc !== null) {
+			procInterval = setInterval(function() {
+				input('');
+			}, interval);
+		}
+	};
+	
+	var clearProcInterval = function() {
+		if (procInterval !== null) {
+			clearInterval(procInterval);
+			procInterval = null;
+		}
 	};
 
 	var start = function(options, pidFilename, cb) {
@@ -106,11 +131,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 					setsid: options.setsid?true:false,
 					cwd: options.chdir
 				});
-		// if we don't send anything to proc's stdin, it seems to stop producing
-		// stdout (at least with source games)
-		procInterval = setInterval(function() {
-			input('');
-		}, options.ioInterval);
+		
+		if (options.ioInterval > 0) {
+			setProcInputInterval(options.ioInterval);
+		}
 		console.log('process spawned');
 		
 		proc.stdout.on('data', function(data) {
@@ -174,6 +198,17 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 			proc.stdin.write(string+'\n');
 		}
 	};
+	
+	var HUP = function(cb) {
+		readOptions(configFilename, function() {
+			if (options.process.ioInterval > 0) {
+				setProcInputInterval(options.process.ioInterval);
+			} else if (proc !== null) {
+				clearProcInterval();
+			}
+			cb();
+		});
+	};
 
 	function makeEnum(array) {
 		// enum is a reserved word (in browser environments)
@@ -183,5 +218,24 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		}
 		return p_enum;
 	};
+	
 };
 
+var readOptions = function(filename, cb) {
+	fs.readFile(filename, function(err, data) {
+	if (err) throw err;
+
+		options = JSON.parse(data.toString())
+		cb();
+	});
+};
+
+module.exports = function(filename, cb) {
+	configFilename = filename;
+	readOptions(configFilename, function() {
+		cb(options.port);
+	});
+	return {
+		start: start
+	};
+};
