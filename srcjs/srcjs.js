@@ -27,7 +27,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 			unixlib.pamauth('system-auth', data.username, data.password, function(result) {
 				if (!result) {
 					cb(warnings.incorrectLogin);
-				} else {					
+				} else {
+					// we listen to events individually, but to emit events, we push
+					// push socket into sockets array.
+					// TODO: use socket.io "rooms" or "broadcast" features instead
 					getStatus(function(status, isUnattached) {
 						sockets.push(socket);
 						cb(false, status);
@@ -48,12 +51,12 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 						input(string);
 					});
 					socket.on('disconnect', function () {
+						// this is especially bad (thread safety?)
 						sockets.splice(sockets.indexOf(socket), 1);
 					});
 				}
 			});
 		});
-		
 	});
 
 
@@ -62,7 +65,6 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		if (proc === null) {
 			fs.readFile(options.pidFilename, function(err, pid) {
 				if (err) {
-					console.log('cannot open '+options.pidFilename+' or does no exist');
 					cb(Status.STOPPED);
 				} else {
 					// signal zero tests if process is running
@@ -83,6 +85,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 
 	var onProcData = function(data, channel) {
 		for(var i = 0, ilen = sockets.length; i < ilen; i++) {
+			// volatile means we don't care if it doesn't get delivered
 			sockets[i].volatile.emit(channel, data);
 		}
 	};
@@ -103,6 +106,8 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 					setsid: options.setsid?true:false,
 					cwd: options.chdir
 				});
+		// if we don't send anything to proc's stdin, it seems to stop producing
+		// stdout (at least with source games)
 		procInterval = setInterval(function() {
 			input('');
 		}, options.ioInterval);
@@ -113,25 +118,6 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		});
 		proc.stderr.on('data', function(data) {
 			onProcData(data.toString(), 'stderr');
-		});
-		
-		proc.stdout.on('end', function() {
-			console.log('proc stdout end');
-		});
-		proc.stdout.on('error', function(exception) {
-			console.log('proc stdout error', exception);
-		});
-		proc.stdout.on('close', function() {
-			console.log('proc stdout close');
-		});
-		proc.stderr.on('end', function() {
-			console.log('proc stderr end');
-		});
-		proc.stderr.on('error', function(exception) {
-			console.log('proc stderr error', exception);
-		});
-		proc.stderr.on('close', function() {
-			console.log('proc stderr close');
 		});
 		
 		proc.on('exit', onProcExit);
@@ -146,11 +132,15 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	};
 
 	var stop = function() {
+		// always kill proc hierarchy
 		var kill = function(pid) {
+			// is it running?
 			cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
 				if (!error) {
+					// kill process hierarchy by parent pid (kills childs)
 					cp.exec('pkill -TERM -P '+pid, function (error, stdout, stderr) {
 						if (!error) {
+							// now kill the original process
 							cp.exec('kill -9 '+pid, function (error, stdout, stderr) {
 								if (!error) {
 									onProcExit(0);
@@ -186,6 +176,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	};
 
 	function makeEnum(array) {
+		// enum is a reserved word (in browser environments)
 		var p_enum = {};
 		for(var i = 0; i < array.length; i++) {
 			p_enum[array[i]] = array[i];

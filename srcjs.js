@@ -1,3 +1,4 @@
+// let's quickly setup an express server. srcds/srcds.js handles socket.io and the game server.
 var app = require('express').createServer();
 var fs = require('fs');
 
