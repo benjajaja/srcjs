@@ -12,17 +12,25 @@ var start = function(app) {
 PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 (If you don\'t restart, the game server will continue running, but you will not be able to send commands or see output)',
 		incorrectLogin: 'Incorrect username or password',
-		sigHUPExecuted: 'Configuration reloaded, restart server if you changed command or arguments'
+		sigHUPExecuted: 'Configuration reloaded, restart server if you changed command or arguments',
+		uncaughtException: 'WARNING: an uncaught exception ocurred.',
+		stopError: 'WARNING: an error ocurred when performing "stop" commands.',
 	};
 
 	var proc = null;
 	var procInterval = null;
-	var sockets = [];
 
 	var Status = makeEnum(['STOPPED', 'STARTED']);
 
 	io.configure(function() {
 		io.set('log level', 1);
+	});
+	
+	process.on('uncaughtException', function(err) {
+		try {
+			console.log('UNCAUGHT EXCEPTION', err);
+			onProcData('warn', warnings.uncaughtException);
+		} catch (e) {}
 	});
 	
 	io.sockets.on('connection', function (socket) {
@@ -32,11 +40,8 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 				if (!result) {
 					cb(warnings.incorrectLogin);
 				} else {
-					// we listen to events individually, but to emit events, we push
-					// push socket into sockets array.
-					// TODO: use socket.io "rooms" or "broadcast" features instead
 					getStatus(function(status, isUnattached) {
-						sockets.push(socket);
+						socket.join('all');
 						cb(false, status);
 						if (isUnattached) {
 							socket.emit('warn', warnings.runningUnattached);
@@ -56,10 +61,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 						});
 					});
 					
-					socket.on('disconnect', function () {
-						// this is especially bad (thread safety?)
-						sockets.splice(sockets.indexOf(socket), 1);
-					});
+					//socket.on('disconnect', function () {});
 				}
 			});
 		});
@@ -90,20 +92,17 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	};
 
 	var onProcData = function(data, channel) {
-		for(var i = 0, ilen = sockets.length; i < ilen; i++) {
-			// volatile means we don't care if it doesn't get delivered
-			sockets[i].volatile.emit(channel, data);
-		}
+		io.sockets.in('all').volatile.emit(channel, data);
 	};
 
 	var onProcExit = function(code) {
-		for(var i = 0, ilen = sockets.length; i < ilen; i++) {
-			sockets[i].emit('exit', code);
+		io.sockets.in('all').volatile.emit('exit', code);
+		if (proc !== null) {
+			proc.removeAllListeners('exit');
+			proc.stdout.removeAllListeners('data');
+			proc.stderr.removeAllListeners('data');
+			proc = null;
 		}
-		proc.removeAllListeners('exit');
-		proc.stdout.removeAllListeners('data');
-		proc.stderr.removeAllListeners('data');
-		proc = null;
 		clearProcInterval();
 	};
 	
@@ -157,39 +156,93 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 
 	var stop = function() {
 		// always kill proc hierarchy
-		var kill = function(pid) {
+		var kill = function(pid, signal, cb) {
 			// is it running?
 			cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
 				if (!error) {
 					// kill process hierarchy by parent pid (kills childs)
-					cp.exec('pkill -TERM -P '+pid, function (error, stdout, stderr) {
+					cp.exec('pkill -'+signal+' -P '+pid, function (error, stdout, stderr) {
 						if (!error) {
 							// now kill the original process
-							cp.exec('kill -9 '+pid, function (error, stdout, stderr) {
+							cp.exec('kill -'+signal+' '+pid, function (error, stdout, stderr) {
 								if (!error) {
 									onProcExit(0);
 									console.log('killed process '+pid);
+									cb();
 								} else {
 									console.log('killed child processes, but cannot kill process '+pid);
+									cb();
 								}
 							});
 						} else {
 							console.log('cannot kill process '+pid);
+							cb();
 						}
 					});
 				} else {
 					console.log('cannot ping process '+pid);
+					cb();
 				}
 			});
 		};
-	
-		if (proc !== null) {
-			kill(proc.pid);
-		} else {
-			fs.readFile(options.pidFilename, function(err, pid) {
-				kill(pid.toString());
-			});
+		var runStopFunction = function(stop, cb) {
+			if (stop.input) {
+				if (proc !== null) {
+					input(stop.input);
+					cb();
+				} else {
+					cb();
+				}
+			} else if (stop.signal) {
+				if (proc !== null) {
+					kill(proc.pid, stop.signal, cb);
+					
+				} else {
+					fs.readFile(options.pidFilename, function(err, pid) {
+						kill(pid.toString(), stop.signal, cb);
+					});
+				}
+			}
 		};
+		
+		var index = 0, timeout = null;
+		var runStopStep = function() {
+			console.log('running stop step', options.process.stop[index]);
+			if (options.process.stop[index].timeout) {
+				timeout = setTimeout(function() {
+					runStopFunction(options.process.stop[index], function() {
+						timeout = null;
+						if (index < options.process.stop.length - 1) {
+							index++;
+							runStopStep();
+						}
+					});
+				}, options.process.stop[index].timeout);
+			} else {
+				runStopFunction(options.process.stop[index], function() {
+					if (index < options.process.stop.length - 1) {
+						index++;
+						runStopStep();
+					}
+				});
+			}
+		};
+		if (proc) {
+			// do not process stop steps further if suddenly exits (by internal "quit" command, for instance)
+			proc.on('exit', function() {
+				if (timeout !== null) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+				index = options.process.stop.length;
+			});
+		}
+		try {
+			runStopStep();
+		} catch (e) {
+			console.log('exception on stop():', e);
+			onProcData('warn', warnings.stopError);
+		}
 		
 	};
 

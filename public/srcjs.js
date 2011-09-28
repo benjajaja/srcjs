@@ -33,7 +33,7 @@ var srcjs = (function() {
 		return p_enum;
 	};
 	var Status = makeEnum(['STOPPED', 'STARTED']);
-	
+	var console;
 	
 	var history = (function() {
 		// notice importance of pre- and post-increment on "index" (it's for brevity)
@@ -73,6 +73,7 @@ var srcjs = (function() {
 		},
 		
 		init: function(socket, status) {
+			console = $('#srcjsConsole');
 			socket.on('started', srcjs.onStarted);
 			socket.on('stdout', srcjs.onStdout);
 			socket.on('stderr', srcjs.onStderr);
@@ -141,8 +142,12 @@ var srcjs = (function() {
 				div = $('<div/>');
 			}
 			div.text(text);
-			$('#srcjsConsole').append(div);
-			$('#srcjsConsole').scrollTop($('#srcjsConsole')[0].scrollHeight);
+			
+			if (console.children().size() > 100) {
+				console.children().filter(':lt(50)').remove();
+			}
+			console.append(div);
+			console.scrollTop(console[0].scrollHeight);
 		},
 		
 		onStdout: function(data) {
