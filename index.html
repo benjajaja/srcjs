@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta ccharset="utf-8"/>
+	<title>srcjs</title>
+	<link rel="stylesheet" href="/styles.css" type="text/css"/>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/jquery-1.6.3.min.js"></script>
+	<script src="/srcjs.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono|Aldrich' rel='stylesheet' type='text/css'>
+</head>
+<body>
+
+<div class="srcjs">
+	<h1>srcjs - SourceDS JavaScript console</h1>
+	
+	<form method="post" action="/ignoreme" id="srcjsLogin" target="srcjsLoginIFrame">
+		<fieldset>
+			<label>
+				Username:
+				<input type="text" name="username" id="srcjsLoginUsername"/>
+			</label>
+			<label>
+				Password:
+				<input type="password" name="password" id="srcjsLoginPassword"/>
+			</label>
+			<button type="submit" id="srcjsLoginButton" disabled>Login</button>
+		</fieldset>
+	</form>
+	<iframe id="srcjsLoginIFrame" src="about:blank"></iframe>
+	
+	<div id="srcjsInterface">
+		<div class="srcjsControl">
+			<button id="btnStart" disabled>Start</button>
+			<button id="btnStop" disabled>Stop</button>
+		</div>
+		<div id="console" readonly></div>
+
+		<div class="srcjsInput">
+			<button id="btnInput" disabled>&#8629;</button>
+			<div class="srcjsInputWrapper">
+				<input id="input" autocomplete="off"/>
+			</div>
+		</div>
+		<h5>&copy; 2011 Benjamin "GipsyKing" Grosse</h5>
+	</div>
+
+</body>
+</html>

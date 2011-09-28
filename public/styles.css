@@ -1,0 +1,241 @@
+/* base.css, part of YUI's CSS Foundation */
+* {
+	margin: 0;
+}
+h1 {
+	/*18px via YUI Fonts CSS foundation*/
+	font-size:138.5%;  
+}
+h2 {
+	/*16px via YUI Fonts CSS foundation*/
+	font-size:123.1%; 
+}
+h3 {
+	/*14px via YUI Fonts CSS foundation*/
+	font-size:108%;  
+}
+h1,h2,h3 {
+	/* top & bottom margin based on font size */
+	margin:1em 0;
+}
+h1,h2,h3,h4,h5,h6,strong {
+	/*bringing boldness back to headers and the strong element*/
+	font-weight:bold; 
+}
+abbr,acronym {
+	/*indicating to users that more info is available */
+	border-bottom:1px dotted #000;
+	cursor:help;
+} 
+em {
+	/*bringing italics back to the em element*/
+	font-style:italic;
+}
+blockquote,ul,ol,dl {
+	/*giving blockquotes and lists room to breath*/
+	margin:1em;
+}
+ol,ul,dl {
+	/*bringing lists on to the page with breathing room */
+	margin-left:2em;
+}
+ol li {
+	/*giving OL's LIs generated numbers*/
+	list-style: decimal outside;	
+}
+ul li {
+	/*giving UL's LIs generated disc markers*/
+	list-style: disc outside;
+}
+dl dd {
+	/*giving UL's LIs generated numbers*/
+	margin-left:1em;
+}
+th,td {
+	/*borders and padding to make the table readable*/
+	border:1px solid #000;
+	padding:.5em;
+}
+th {
+	/*distinguishing table headers from data cells*/
+	font-weight:bold;
+	text-align:center;
+}
+caption {
+	/*coordinated marking to match cell's padding*/
+	margin-bottom:.5em;
+	/*centered so it doesn't blend in to other content*/
+	text-align:center;
+}
+p,fieldset,table {
+	/*so things don't run into each other*/
+	margin-bottom:1em;
+}
+img {
+	border: none;
+}
+a {
+	color: inherit;
+}
+/* base css end */
+
+
+
+html, body {
+	font-family: Arial, Helvetica, sans-serif, Tahoma;
+	color: #000;
+	background-color: #888;
+	font-size: 16px;
+	font-family: 'Aldrich', sans-serif;
+	text-shadow: 1px 1px 2px #022747;
+}
+
+
+#console {
+	width: 100%;
+	border: none;
+	margin: 0;
+	padding: 0;
+	height: 600px;
+	background-color: #000;
+	font-family: 'Droid Sans Mono', sans-serif;
+	font-size: 12px;
+	text-shadow: none;
+	margin-bottom: 4px;
+	overflow: auto;
+	overflow-y: scroll;
+}
+	#console div {
+		white-space: pre;
+		color: #81F7F3;
+	}
+		#console div.error {
+			color: #faa;
+		}
+		#console div.system {
+			color: #2EFE2E;
+		}
+		#console div.warning {
+			color: #F7FE2E;
+			font-weight: bold;
+		}
+	#console::-webkit-scrollbar {
+		width: 10px;
+		height: 12px;
+	}
+	#console::-webkit-scrollbar-track {
+		background-color: #000;
+	}
+	#console::-webkit-scrollbar-thumb {
+		border-radius: 10px;
+		background: rgba(255,255,255,0.75);
+		margin: 0 1px;
+	}
+
+.srcjs {
+	margin: 20px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	background-color: #ddd;
+	padding: 20px;
+	-moz-box-shadow: 0px 0px 20px 0px #000000;
+	box-shadow: 0px 0px 20px 0px #000000;
+}
+	#srcjsLogin {
+	}
+		#srcjsLogin fieldset {
+			border: none;
+			width: 300px;
+			margin: auto;
+		}
+		#srcjsLogin label {
+			display: block;
+			margin: 10px 0;
+		}
+			#srcjsLogin label input {
+				width: 200px;
+				float: right;
+				border: 1px inset #ccc;
+				-moz-box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
+				box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
+			}
+		#srcjsLogin button {
+			float: right;
+			clear: both;
+		}
+	#srcjsLoginIFrame {
+		display: none;
+	}
+	.srcjs #srcjsInterface {
+		display: none;
+	}
+	.srcjs h1 {
+		margin: 4px;
+	}
+	.srcjs button {
+		font-family: 'Aldrich', sans-serif;
+		
+	}
+	.srcjs button {
+		color: #444;
+		padding: 4px 8px;
+		font-weight: bold;
+		border: 1px solid #aaa;
+		border-left-color: #bbb;
+		border-top-color: #bbb;
+		-moz-border-radius: 2px;
+		border-radius: 2px;
+		background: #f5f5f5; /* Old browsers */
+		background: -moz-linear-gradient(top, #f5f5f5 0%, #f1f1f1 100%); /* FF3.6+ */
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f5f5f5), color-stop(100%,#f1f1f1)); /* Chrome,Safari4+ */
+		background: -webkit-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* IE10+ */
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f5f5f5', endColorstr='#f1f1f1',GradientType=0 ); /* IE6-9 */
+		background: linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* W3C */
+	}
+		.srcjs button:hover {
+			color: #222;
+			-moz-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.5);
+			box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.25);
+		}
+		.srcjs button:active {
+			border-left-color: #888;
+			border-top-color: #888;
+			border-right-color: #bbb;
+			border-bottom-color: #bbb;
+			-moz-box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.5);
+			box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.25);
+		}
+		.srcjs button[disabled] {
+			color: #aaa;
+			-moz-box-shadow: none;
+			box-shadow: none;
+		}
+	.srcjsControl {
+		padding: 2px 0;
+	}
+	.srcjsInput {
+	}
+		.srcjsInputWrapper {
+			margin-right: 34px;
+			border: 1px inset #ccc;
+			height: 30px;
+			-moz-box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
+			box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
+			background-color: #fff;
+		}
+		#input {
+			display: block;
+			width: 100%;
+			height: 100%;
+			border: none;
+			font-size: 1.25em;
+			font-family: 'Droid Sans Mono', sans-serif;
+			background-color: transparent;
+		}
+		#btnInput {
+			width: 32px;
+			height: 32px;
+			float: right;
+		}

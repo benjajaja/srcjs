@@ -1,0 +1,13 @@
+srcjs - Source Dedicated Server JavaScript Console Interface
+
+Copyright 2011 Benjamin Grosse <ste3ls@gmail.com>
+
+See "LICENSE" file for mor info.
+
+You can start and stop a source dedicated server, watch its output, and enter input.
+If node or the app crashes, the stdout/stdin connection to the server process is
+lost, but you can still restart it.
+It should probably work for any other game server, or program, that logs to stdout
+and listens to stdin.
+
+
