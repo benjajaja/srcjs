@@ -138,76 +138,21 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	});
 
 	
-	var EventBus = function() {
-		require('events').EventEmitter.call(this);
-	};
-	EventBus.prototype = Object.create(require('events').EventEmitter.prototype, {
-		constructor: {
-			value: EventBus,
-			enumerable: false
-		}
-	});
+
 	
-	var eventBus = new EventBus();
-	eventBus.on('addscripts', function(scripts) {
-		for(var i = 0; i < scripts.length; i++) {
-			(function(script) {
-				if (!script.filename) {
-					script.filename = 'client.js';
-				}
-				
-				console.log('added route /plugins/'+script.plugin+'/'+script.filename);
-				app.get('/plugins/'+script.plugin+'/'+script.filename, function (req, res) {
-					fs.readFile(__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, function(err, data) {
-						if (err) {
-							res.send('not found', 404);
-							console.log('plugin client script not found: '+__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, err);
-							
-						} else {
-							res.send(data.toString());
-						}
-					});
-					
-				});
-				eventBus.on('userjoin', function(socket) {
-					socket.emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
-				});
-				
-			})(scripts[i]);
-		}
-		app.get('*', function(req, res, next) {
-			console.log(req.url);
-			next();
+	var eventBus = require('./eventbus')(app);
+
+	require('./plugins')(options.plugins, eventBus, io, function() {
+		getStatus(proc, options.pidFilename, function(status, isUnattached) {
+			if (status == Status.STARTED) {
+				eventBus.emit('procstart', isUnattached);
+			} else {
+				eventBus.emit('procstop');
+			}
 		});
 	});
-
-	fs.readdir('./plugins', function(err, files) {
-		if (err) throw err;
-		for(var i = 0; i < files.length; i++) {
-			(function(name) {
-				fs.stat('./plugins/'+name, function(err, stat) {
-					if (err) throw err;
-					if (stat.isDirectory()) {
-						try {
-							require('../plugins/'+name+'/plugin')(eventBus, io, name);
-							
-						} catch (e) {
-							console.log('Cannot load plugin '+name, e); 
-						}
-					}
-				});
-			})(files[i]);
-		}
-		setTimeout(function() {
-			getStatus(proc, options.pidFilename, function(status, isUnattached) {
-				if (status == Status.STARTED) {
-					eventBus.emit('procstart', isUnattached);
-				} else {
-					eventBus.emit('procstop');
-				}
-			});
-		}, 1000);
-	});
+	
+	
 
 	var onProcData = function(data, channel) {
 		io.of('/console').in('all').volatile.emit(channel.toLowerCase() /* türk i? */, data);
