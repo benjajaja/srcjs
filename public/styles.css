@@ -115,7 +115,7 @@ html, body {
 		#srcjsConsole div.system {
 			color: #2EFE2E;
 		}
-		#srcjsConsole div.warning {
+		#srcjsConsole div.warn {
 			color: #F7FE2E;
 			font-weight: bold;
 		}

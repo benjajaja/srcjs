@@ -1,9 +1,47 @@
 var fs = require('fs');
+var cp = require('child_process');
+var start = require('./start');
+var stop = require('./stop');
+
+// these here are global, so we can reload them easily without having to cancel callbacks etc:
 var options, configFilename;
 
-var start = function(app) {
+var Status = makeEnum(['STOPPED', 'STARTED']);
+var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);
+
+function makeEnum(array) {
+	// enum is a reserved word (in browser environments)
+	var p_enum = {};
+	for(var i = 0; i < array.length; i++) {
+		p_enum[array[i]] = array[i];
+	}
+	return p_enum;
+};
+
+var getStatus = function(proc, filename, cb) {
+	if (proc === null) {
+		fs.readFile(filename, function(err, pid) {
+			if (err) {
+				cb(Status.STOPPED);
+			} else {
+				// signal zero tests if process is running
+				cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
+					if (error) {
+						cb(Status.STOPPED);
+					} else {
+						cb(Status.STARTED, true);
+					}
+				});
+			}
+		});
+		
+	} else {
+		cb(Status.STARTED);
+	}
+};
+
+var srcjsStart = function(app, username) {
 	var io = require('socket.io').listen(app);
-	var cp = require('child_process');
 	
 	var unixlib = require('unixlib');
 	
@@ -13,14 +51,12 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 (If you don\'t restart, the game server will continue running, but you will not be able to send commands or see output)',
 		incorrectLogin: 'Incorrect username or password',
 		sigHUPExecuted: 'Configuration reloaded, restart server if you changed command or arguments',
-		uncaughtException: 'WARNING: an uncaught exception ocurred.',
+		uncaughtException: 'WARNING: an uncaught exception ocurred',
 		stopError: 'WARNING: an error ocurred when performing "stop" commands.',
 	};
 
 	var proc = null;
 	var procInterval = null;
-
-	var Status = makeEnum(['STOPPED', 'STARTED']);
 
 	io.configure(function() {
 		io.set('log level', 1);
@@ -28,75 +64,84 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	
 	process.on('uncaughtException', function(err) {
 		try {
-			console.log('UNCAUGHT EXCEPTION', err);
-			onProcData('warn', warnings.uncaughtException);
+			console.error('UNCAUGHT EXCEPTION', err.message, err.stack);
+			onProcData(warnings.uncaughtException+': '+err.message, Channels.WARN);
 		} catch (e) {}
 	});
 	
 	io.sockets.on('connection', function (socket) {
 		socket.emit('connected');
 		socket.on('login', function(data, cb) {
-			unixlib.pamauth('system-auth', data.username, data.password, function(result) {
-				if (!result) {
-					cb(warnings.incorrectLogin);
-				} else {
-					getStatus(function(status, isUnattached) {
+			if (data.username != username) {
+				cb(warnings.incorrectLogin);
+				console.log('username "'+data.username+'" doesn\'t even match '+username, data.username != username, data.username, username);
+				
+			} else {
+				unixlib.pamauth('system-auth', data.username, data.password, function(result) {
+					if (!result) {
+						cb(warnings.incorrectLogin);
+					} else {
 						socket.join('all');
-						cb(false, status);
-						if (isUnattached) {
-							socket.emit('warn', warnings.runningUnattached);
-						}
-					});
-					
-					socket.on('start', function () {
-						start(options.process, options.pidFilename, function() {
-							io.sockets.in('all').volatile.emit('started');
+						getStatus(proc, options.pidFilename, function(status, isUnattached) {
+							cb(false, status);
+							if (isUnattached) {
+								socket.emit('warn', warnings.runningUnattached);
+							}
 						});
-					});
-					socket.on('stop', stop);
-					socket.on('input', input);
-					socket.on('HUP', function() {
-						HUP(function() {
-							socket.emit('warn', warnings.sigHUPExecuted);
+						
+						socket.on('start', function () {
+							start(options.process, options.pidFilename,
+								function(data) {
+									onProcData(data.toString(), Channels.STDOUT);
+								},
+								function(data) {
+									onProcData(data.toString(), Channels.STDERR);
+								},
+								onProcExit,
+								function(err, newProc) {
+									if (err) throw err;
+									proc = newProc;
+									if (options.process.ioInterval > 0) {
+										setProcInputInterval(options.process.ioInterval);
+									}
+									io.sockets.in('all').emit('started');
+								}
+							);
 						});
-					});
-					
-					//socket.on('disconnect', function () {});
-				}
-			});
+						socket.on('stop', function() {
+							var manualOnProcExit = (proc === null);
+							stop(proc, options, function(err, signal) {
+								if (err) {
+									io.sockets.in('all').emit('warn', warnings.stopError);
+								} else if (manualOnProcExit) {
+									onProcExit(0, signal);
+								}
+							});
+						});
+						socket.on('input', input);
+						socket.on('HUP', function() {
+							HUP(function() {
+								socket.emit('warn', warnings.sigHUPExecuted);
+							});
+						});
+						
+						//socket.on('disconnect', function () {});
+					}
+				});
+			}
 		});
 	});
 
 
 
-	var getStatus = function(cb) {
-		if (proc === null) {
-			fs.readFile(options.pidFilename, function(err, pid) {
-				if (err) {
-					cb(Status.STOPPED);
-				} else {
-					// signal zero tests if process is running
-					cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
-						if (error) {
-							cb(Status.STOPPED);
-						} else {
-							cb(Status.STARTED, true);
-						}
-					});
-				}
-			});
-			
-		} else {
-			cb(Status.STARTED);
-		}
-	};
+
 
 	var onProcData = function(data, channel) {
-		io.sockets.in('all').volatile.emit(channel, data);
+		io.sockets.in('all').volatile.emit(channel.toLowerCase() /* türk i? */, data);
 	};
 
-	var onProcExit = function(code) {
-		io.sockets.in('all').volatile.emit('exit', code);
+	var onProcExit = function(code, signal) {
+		io.sockets.in('all').emit('exit', {code: code, signal: signal});
 		if (proc !== null) {
 			proc.removeAllListeners('exit');
 			proc.stdout.removeAllListeners('data');
@@ -111,7 +156,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		// stdout (at least with source games)
 		if (proc !== null) {
 			procInterval = setInterval(function() {
-				input('');
+				if (!input('')) {
+					clearInterval(procInterval);
+					procInterval = null;
+				}
 			}, interval);
 		}
 	};
@@ -123,133 +171,19 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		}
 	};
 
-	var start = function(options, pidFilename, cb) {
-		proc = cp.spawn(options.command,
-				options.arguments,
-				{
-					setsid: options.setsid?true:false,
-					cwd: options.chdir
-				});
-		
-		if (options.ioInterval > 0) {
-			setProcInputInterval(options.ioInterval);
-		}
-		console.log('process spawned');
-		
-		proc.stdout.on('data', function(data) {
-			onProcData(data.toString(), 'stdout');
-		});
-		proc.stderr.on('data', function(data) {
-			onProcData(data.toString(), 'stderr');
-		});
-		
-		proc.on('exit', onProcExit);
-		
-		fs.writeFile(pidFilename, proc.pid.toString(), function(err) {
-			if (err) {
-				console.error('Cannot write pidfile ('+pidFilename+'):', err);
-			}
-		});
-		
-		cb();
-	};
 
-	var stop = function() {
-		// always kill proc hierarchy
-		var kill = function(pid, signal, cb) {
-			// is it running?
-			cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
-				if (!error) {
-					// kill process hierarchy by parent pid (kills childs)
-					cp.exec('pkill -'+signal+' -P '+pid, function (error, stdout, stderr) {
-						if (!error) {
-							// now kill the original process
-							cp.exec('kill -'+signal+' '+pid, function (error, stdout, stderr) {
-								if (!error) {
-									onProcExit(0);
-									console.log('killed process '+pid);
-									cb();
-								} else {
-									console.log('killed child processes, but cannot kill process '+pid);
-									cb();
-								}
-							});
-						} else {
-							console.log('cannot kill process '+pid);
-							cb();
-						}
-					});
-				} else {
-					console.log('cannot ping process '+pid);
-					cb();
-				}
-			});
-		};
-		var runStopFunction = function(stop, cb) {
-			if (stop.input) {
-				if (proc !== null) {
-					input(stop.input);
-					cb();
-				} else {
-					cb();
-				}
-			} else if (stop.signal) {
-				if (proc !== null) {
-					kill(proc.pid, stop.signal, cb);
-					
-				} else {
-					fs.readFile(options.pidFilename, function(err, pid) {
-						kill(pid.toString(), stop.signal, cb);
-					});
-				}
-			}
-		};
-		
-		var index = 0, timeout = null;
-		var runStopStep = function() {
-			console.log('running stop step', options.process.stop[index]);
-			if (options.process.stop[index].timeout) {
-				timeout = setTimeout(function() {
-					runStopFunction(options.process.stop[index], function() {
-						timeout = null;
-						if (index < options.process.stop.length - 1) {
-							index++;
-							runStopStep();
-						}
-					});
-				}, options.process.stop[index].timeout);
-			} else {
-				runStopFunction(options.process.stop[index], function() {
-					if (index < options.process.stop.length - 1) {
-						index++;
-						runStopStep();
-					}
-				});
-			}
-		};
-		if (proc) {
-			// do not process stop steps further if suddenly exits (by internal "quit" command, for instance)
-			proc.on('exit', function() {
-				if (timeout !== null) {
-					clearTimeout(timeout);
-					timeout = null;
-				}
-				index = options.process.stop.length;
-			});
-		}
-		try {
-			runStopStep();
-		} catch (e) {
-			console.log('exception on stop():', e);
-			onProcData('warn', warnings.stopError);
-		}
-		
-	};
 
 	var input = function(string) {
 		if (proc !== null) {
-			proc.stdin.write(string+'\n');
+			try {
+				proc.stdin.write(string+'\n');
+				return true;
+			} catch (e) {
+				console.error('proc not null but stdin socket not writable');
+				return false;
+			}
 		}
+		return false;
 	};
 	
 	var HUP = function(cb) {
@@ -263,14 +197,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		});
 	};
 
-	function makeEnum(array) {
-		// enum is a reserved word (in browser environments)
-		var p_enum = {};
-		for(var i = 0; i < array.length; i++) {
-			p_enum[array[i]] = array[i];
-		}
-		return p_enum;
-	};
+
 	
 };
 
@@ -289,6 +216,13 @@ module.exports = function(filename, cb) {
 		cb(options.port);
 	});
 	return {
-		start: start
+		start: function(app) {
+			// get username of script (process.getUid only gets id)
+			require('child_process').exec('id -un', function(err, stdout, stderr) {
+				if (err) throw err;
+				
+				srcjsStart(app, stdout.replace(/\n/, ''));
+			});
+		}
 	};
 };

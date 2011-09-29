@@ -33,6 +33,7 @@ var srcjs = (function() {
 		return p_enum;
 	};
 	var Status = makeEnum(['STOPPED', 'STARTED']);
+	var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);
 	var console;
 	
 	var history = (function() {
@@ -75,18 +76,25 @@ var srcjs = (function() {
 		init: function(socket, status) {
 			console = $('#srcjsConsole');
 			socket.on('started', srcjs.onStarted);
-			socket.on('stdout', srcjs.onStdout);
-			socket.on('stderr', srcjs.onStderr);
-			socket.on('warn', srcjs.onWarning);
+			for(var CHANNEL in Channels) {
+				// separate scope for CHANNEL
+				(function(CHANNEL) {
+					socket.on(CHANNEL.toLowerCase(), function(data) {
+						srcjs.console(data, CHANNEL.toLowerCase());
+					});
+				})(CHANNEL);
+			}
 			socket.on('exit', srcjs.onExit);
 			
 			srcjs.onStatus(status);
 			
 			$('#srcjsBtnStart').click(function() {
+				srcjs.console('Starting server...', 'system');
 				srcjs.start(socket);
 			});
 			
 			$('#srcjsBtnStop').click(function() {
+				srcjs.console('Stopping server...', 'system');
 				srcjs.stop(socket);
 			});
 			
@@ -95,6 +103,7 @@ var srcjs = (function() {
 			});
 			
 			$('#srcjsBtnHUP').click(function() {
+				srcjs.console('Sending HUP to console...', 'system');
 				srcjs.sigHUP(socket);
 			});
 			
@@ -134,10 +143,10 @@ var srcjs = (function() {
 			srcjs.onStatus(Status.STARTED);
 		},
 		
-		console: function(text, className) {
+		console: function(text, channel) {
 			var div;
-			if (className) {
-				div = $('<div class="'+className+'"/>');
+			if (channel) {
+				div = $('<div class="'+channel+'"/>');
 			} else {
 				div = $('<div/>');
 			}
@@ -150,16 +159,16 @@ var srcjs = (function() {
 			console.scrollTop(console[0].scrollHeight);
 		},
 		
-		onStdout: function(data) {
-			srcjs.console(data);
-		},
 		
-		onStderr: function(data) {
-			srcjs.console(data, 'error');
-		},
-		
-		onExit: function(code) {
-			srcjs.console('STOPPED WITH EXIT CODE '+code, 'system');
+		onExit: function(data) {
+			if (typeof data.signal != 'undefined' && data.signal !== null) {
+				srcjs.console('Process forcefully killed with signal '+data.signal, 'system');
+			} else if (typeof data.code != 'undefined' && data.code !== null) {
+				srcjs.console('Process stopped with exit code '+code, 'system');
+			} else {
+				window.console.log(data);
+				srcjs.console('Process stopped with unknown exit code or was not running (anymore)', 'warn');
+			}
 			srcjs.onStatus(Status.STOPPED);
 		},
 		
@@ -174,9 +183,5 @@ var srcjs = (function() {
 				$('#srcjsBtnInput').attr('disabled', null);
 			}
 		},
-		
-		onWarning: function(message) {
-			srcjs.console(message, 'warning');
-		}
 	};
 })();
