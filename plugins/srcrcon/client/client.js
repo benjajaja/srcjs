@@ -7,17 +7,20 @@ srcjs.plugins.srcrcon = (function() {
 	var rconio = io.connect('/rcon');
 	
 	rconio.on('data', function(data) {
-		panel.val('rcon data: '+data);
+		panel.val(panel.val() + '\n' + data);
 	});
 
 	// let's add a tab
-	var panel = $('<textarea/>');
+	var panel = $('<textarea cols="50" rows="20"/>');
 	srcjs.addTab('RCON', panel);
 	
-	// MUST return object with property onStatus: function(status)
+	// MUST return object with property onStatus: function(status) and onUnload: function()
 	return {
 		onStatus: function(status) {
-			panel.val('srcrcon plugin notified of status "'+status+'"');
+			panel.val('srcrcon plugin notified of status "'+status+'" on client side');
+		},
+		onUnload: function() {
+			// cleanup
 		}
 	}
 })();

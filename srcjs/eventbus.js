@@ -20,24 +20,27 @@ module.exports = function(app) {
 				}
 				
 				console.log('added route /plugins/'+script.plugin+'/'+script.filename);
-				app.get('/plugins/'+script.plugin+'/'+script.filename, function (req, res) {
-					fs.readFile(__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, function(err, data) {
-						if (err) {
-							res.send('not found', 404);
-							console.log('plugin client script not found: '+__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, err);
-							
-						} else {
-							res.send(data.toString());
-						}
+				if (app.lookup.get('/plugins/'+script.plugin+'/'+script.filename).length == 0) {
+					app.get('/plugins/'+script.plugin+'/'+script.filename, function (req, res) {
+						fs.readFile(__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, function(err, data) {
+							if (err) {
+								res.send('not found', 404);
+								console.log('plugin client script not found: '+__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, err);
+								
+							} else {
+								res.send(data.toString());
+							}
+						});
+						
 					});
-					
-				});
+				}
+				
 				eventBus.on('userjoin', function(socket) {
 					socket.emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
 				});
 				
 			})(scripts[i]);
 		}
-	});	
+	});
 	return eventBus;
 };

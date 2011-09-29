@@ -164,6 +164,22 @@ var srcjs = (function() {
 				}
 				onStatus(Status.STOPPED);
 			});
+			socket.on('unload', function(data) {
+				for(var name in srcjs.plugins) {
+					if (typeof srcjs.plugins[name].onUnload == 'function') {
+						try {
+							srcjs.plugins[name].onUnload();
+						} catch(e) {
+							window.console.log('error while unloading plugin '+name+':', e);
+						}
+					}
+				}
+				srcjs.plugins = {};
+				$('.srcjsTabs > button:gt(0)').remove();
+				$('.srcjsTabPanels > srcjsTabPanel:gt(0)').remove();
+				tabs.splice(1);
+				socket.emit('unloaded');
+			});
 			
 			onStatus(status);
 			
@@ -207,6 +223,10 @@ var srcjs = (function() {
 		plugins: {},
 		
 		addTab: function(title, panel) {
+			if (typeof title != 'string' || typeof panel != 'object') {
+				window.console.log('incorrect parameter(s) for srcjs.addTab - expected string, element');
+				return;
+			}
 			var tab = $('<button>'+title+'</button>');
 			$('.srcjsTabs').append(tab);
 			

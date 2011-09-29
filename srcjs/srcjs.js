@@ -40,6 +40,28 @@ var getStatus = function(proc, filename, cb) {
 	}
 };
 
+var loadPlugins = function(proc, pluginEventBus, io, cb) {
+	require('./plugins').load(options.plugins, pluginEventBus, io, function(plugins) {
+		getStatus(proc, options.pidFilename, function(status, isUnattached) {
+			if (status == Status.STARTED) {
+				pluginEventBus.emit('procstart', isUnattached);
+			} else {
+				pluginEventBus.emit('procstop');
+			}
+			if (cb) {
+				cb();
+			}
+		});
+	});
+};
+
+var unloadPlugins = function(pluginEventBus, socket) {
+	require('./plugins').unload(pluginEventBus, function() {
+		socket.emit('unload', 'plugins');
+	});
+	
+};
+
 var srcjsStart = function(app, username) {
 	var io = require('socket.io').listen(app);
 	
@@ -82,7 +104,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 						cb(warnings.incorrectLogin);
 					} else {
 						socket.join('all');
-						eventBus.emit('userjoin', socket);
+						pluginEventBus.emit('userjoin', socket);
 						
 						getStatus(proc, options.pidFilename, function(status, isUnattached) {
 							cb(false, status);
@@ -107,7 +129,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 										setProcInputInterval(options.process.ioInterval);
 									}
 									io.of('/console').in('all').emit('started');
-									eventBus.emit('procstart');
+									pluginEventBus.emit('procstart');
 								}
 							);
 						});
@@ -123,13 +145,13 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 						});
 						socket.on('input', input);
 						socket.on('HUP', function() {
-							HUP(function() {
+							HUP(socket, function() {
 								socket.emit('warn', warnings.sigHUPExecuted);
 							});
 						});
 						
 						socket.on('disconnect', function () {
-							eventBus.emit('userleave');
+							pluginEventBus.emit('userleave');
 						});
 					}
 				});
@@ -140,17 +162,9 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	
 
 	
-	var eventBus = require('./eventbus')(app);
+	var pluginEventBus = require('./eventbus')(app);
 
-	require('./plugins')(options.plugins, eventBus, io, function() {
-		getStatus(proc, options.pidFilename, function(status, isUnattached) {
-			if (status == Status.STARTED) {
-				eventBus.emit('procstart', isUnattached);
-			} else {
-				eventBus.emit('procstop');
-			}
-		});
-	});
+	loadPlugins(proc, pluginEventBus, io);
 	
 	
 
@@ -167,7 +181,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 			proc = null;
 		}
 		clearProcInterval();
-		eventBus.emit('procstop');
+		pluginEventBus.emit('procstop');
 	};
 	
 	var setProcInputInterval = function(interval) {
@@ -205,14 +219,23 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		return false;
 	};
 	
-	var HUP = function(cb) {
+	var HUP = function(socket, cb) {
 		readOptions(configFilename, function() {
 			if (options.process.ioInterval > 0) {
 				setProcInputInterval(options.process.ioInterval);
 			} else if (proc !== null) {
 				clearProcInterval();
 			}
-			cb();
+			
+			var onUnloaded = function() {
+				socket.removeListener('unloaded', onUnloaded);
+				loadPlugins(proc, pluginEventBus, io, function() {
+					pluginEventBus.emit('userjoin', socket);
+					cb();
+				});
+			};
+			socket.on('unloaded', onUnloaded);
+			unloadPlugins(pluginEventBus, socket);
 		});
 	};
 
