@@ -24,6 +24,7 @@ var kill = function(pid, signal, cb) {
 		} else {
 			// not running
 			// TODO: remove pidfile
+			console.log('cannot kill process #'+pid+': is not running');
 			cb();
 		}
 	});

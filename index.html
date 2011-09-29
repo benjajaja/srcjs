@@ -30,25 +30,33 @@
 	<iframe id="srcjsLoginIFrame" src="about:blank"></iframe>
 	
 	<div id="srcjsInterface">
-		<div class="srcjsControl">
-			<div class="srcjsProcessControl">
-				<button id="srcjsBtnStart" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStart"/> Start</button>
-				<button id="srcjsBtnStop" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStop"/> Stop</button>
-			</div>
-			<div class="srcjsAppControl">
-				<button id="srcjsBtnHUP"><img src="clear.gif" class="srcjsIcon srcjsIconHUP"/> HUP</button>
-			</div>
+		<div class="srcjsTabs">
+			<button class="active">Console</button>
 		</div>
-		<div id="srcjsConsole"></div>
+		<div class="srcjsTabPanels">
+			<div class="srcjsTabPanel">
+				<div class="srcjsControl">
+					<div class="srcjsProcessControl">
+						<button id="srcjsBtnStart" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStart"/> Start</button>
+						<button id="srcjsBtnStop" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStop"/> Stop</button>
+					</div>
+					<div class="srcjsAppControl">
+						<button id="srcjsBtnHUP"><img src="clear.gif" class="srcjsIcon srcjsIconHUP"/> HUP</button>
+					</div>
+				</div>
+				<div id="srcjsConsole"></div>
 
-		<div class="srcjsInput">
-			<button id="srcjsBtnInput" disabled><img src="clear.gif" class="srcjsIcon srcjsIconInput"/></button>
-			<div class="srcjsInputWrapper">
-				<input id="input" placeholder="command" title="Use arrow up and down keys to go back through history" autocomplete="off"/>
+				<div class="srcjsInput">
+					<button id="srcjsBtnInput" disabled><img src="clear.gif" class="srcjsIcon srcjsIconInput"/></button>
+					<div class="srcjsInputWrapper">
+						<input id="input" placeholder="command" title="Use arrow up and down keys to go back through history" autocomplete="off"/>
+					</div>
+				</div>
 			</div>
 		</div>
-		<h5>&copy; 2011 Benjamin "GipsyKing" Grosse</h5>
 	</div>
-
+	
+	<h5>&copy; 2011 Benjamin "GipsyKing" Grosse</h5>
+</div>
 </body>
 </html>

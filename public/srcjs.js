@@ -3,7 +3,7 @@ if (typeof window.jQuery == 'undefined') {
 	
 } else {
 	$(document).ready(function() {
-		var socket = io.connect();
+		var socket = io.connect('/console');
 		socket.on('connected', function (status) {
 			$('#srcjsLoginButton').attr('disabled', null);
 			$('#srcjsLogin').submit(function() {
@@ -19,8 +19,16 @@ if (typeof window.jQuery == 'undefined') {
 			});
 		});
 		
+		socket.on('loadscript', function(path) {
+			//$(document.head).append($('<script src="'+path+'"/>'));
+			var script = document.createElement("script");
+			script.type = "text/javascript";
+			script.src = path+'?_='+Math.random();
+			document.head.appendChild(script);
+		});
+		
 		socket.on('disconnect', function (status) {
-			alert('Disconnected. Please log in again.');
+			//alert('Disconnected. Please log in again.');
 			window.location.reload();
 		});
 		
@@ -37,7 +45,7 @@ var srcjs = (function() {
 	};
 	var Status = makeEnum(['STOPPED', 'STARTED']);
 	var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);
-	var console;
+	var console, tabs;
 	
 	var history = (function() {
 		// notice importance of pre- and post-increment on "index" (it's for brevity)
@@ -68,6 +76,63 @@ var srcjs = (function() {
 		};
 	})();
 	
+	var input = function(socket) {
+		var command = $('#input').val();
+		if (command != '') {
+			socket.emit('input', command);
+			history.push(command);
+			$('#input').val('');
+		}
+	};
+	
+	var	consoleText = function(text, channel) {
+		var div;
+		if (channel) {
+			div = $('<div class="'+channel+'"/>');
+		} else {
+			div = $('<div/>');
+		}
+		div.text(text);
+		
+		if (console.children().size() > 1000) {
+			console.children().filter(':lt(100)').remove();
+		}
+		console.append(div);
+		console.scrollTop(console[0].scrollHeight);
+	};
+	
+	var onStatus = function(status) {
+		if (status == Status.STOPPED) {
+			$('#srcjsBtnStart').attr('disabled', null);
+			$('#srcjsBtnStop').attr('disabled', 'disabled');
+			$('#srcjsBtnInput').attr('disabled', 'disabled');
+		} else {
+			$('#srcjsBtnStart').attr('disabled', 'disabled');
+			$('#srcjsBtnStop').attr('disabled', null);
+			$('#srcjsBtnInput').attr('disabled', null);
+		}
+		
+		for(var name in srcjs.plugins) {
+			if (typeof srcjs.plugins[name].onStatus == 'function') {
+				srcjs.plugins[name].onStatus(status);
+			}
+		}
+	};
+	
+	var getTabClickHandler = function(index) {
+		return function(e) {
+			for(var i = 0; i < tabs.length; i++) {
+				if (i == index) {
+					tabs[i].panel.show();
+					tabs[i].tab.addClass('active');
+				} else {
+					tabs[i].panel.hide();
+					tabs[i].tab.removeClass('active');
+				}
+			}
+		};
+	};
+	
 	return {
 		login: function(socket, username, password, cb) {
 			socket.emit('login', {
@@ -78,113 +143,82 @@ var srcjs = (function() {
 		
 		init: function(socket, status) {
 			console = $('#srcjsConsole');
-			socket.on('started', srcjs.onStarted);
+			socket.on('started', function() {
+				onStatus(Status.STARTED);
+			});
 			for(var CHANNEL in Channels) {
 				// separate scope for CHANNEL
 				(function(CHANNEL) {
 					socket.on(CHANNEL.toLowerCase(), function(data) {
-						srcjs.console(data, CHANNEL.toLowerCase());
+						consoleText(data, CHANNEL.toLowerCase());
 					});
 				})(CHANNEL);
 			}
-			socket.on('exit', srcjs.onExit);
+			socket.on('exit', function(data) {
+				if (typeof data.signal != 'undefined' && data.signal !== null) {
+					consoleText('Process forcefully killed with signal '+data.signal, 'system');
+				} else if (typeof data.code != 'undefined' && data.code !== null) {
+					consoleText('Process stopped with exit code '+code, 'system');
+				} else {
+					consoleText('Process stopped with unknown exit code or was not running (anymore)', 'warn');
+				}
+				onStatus(Status.STOPPED);
+			});
 			
-			srcjs.onStatus(status);
+			onStatus(status);
 			
 			$('#srcjsBtnStart').click(function() {
-				srcjs.console('Starting server...', 'system');
-				srcjs.start(socket);
+				consoleText('Starting server...', 'system');
+				socket.emit('start');
 			});
 			
 			$('#srcjsBtnStop').click(function() {
-				srcjs.console('Stopping server...', 'system');
-				srcjs.stop(socket);
+				consoleText('Stopping server...', 'system');
+				socket.emit('stop');
 			});
 			
+			
 			$('#srcjsBtnInput').click(function() {
-				srcjs.input(socket);
+				input(socket);
 			});
 			
 			$('#srcjsBtnHUP').click(function() {
-				srcjs.console('Sending HUP to console...', 'system');
-				srcjs.sigHUP(socket);
+				consoleText('Sending HUP to console...', 'system');
+				socket.emit('HUP');
 			});
 			
 			$('#input').keyup(function(e) {
 				if (e.which == 13) {
-					srcjs.input(socket);
+					input(socket);
 				} else if (e.which == 38) {
 					history.back($('#input'));
 				} else if (e.which == 40) {
 					history.forth($('#input'));
 				}
 			});
-		},
-		
-		start: function(socket) {
-			socket.emit('start');
-		},
-		
-		stop: function(socket) {
-			socket.emit('stop');
-		},
-		
-		input: function(socket) {
-			var command = $('#input').val();
-			if (command != '') {
-				socket.emit('input', command);
-				history.push(command);
-				$('#input').val('');
-			}
-		},
-		
-		sigHUP: function(socket) {
-			socket.emit('HUP');
-		},
-		
-		onStarted: function() {
-			srcjs.onStatus(Status.STARTED);
-		},
-		
-		console: function(text, channel) {
-			var div;
-			if (channel) {
-				div = $('<div class="'+channel+'"/>');
-			} else {
-				div = $('<div/>');
-			}
-			div.text(text);
 			
-			if (console.children().size() > 1000) {
-				console.children().filter(':lt(100)').remove();
-			}
-			console.append(div);
-			console.scrollTop(console[0].scrollHeight);
+			tabs = [{
+				tab: $('.srcjsTabs').children().first(),
+				panel: $('.srcjsTabPanels').children().first(),
+			}];
+			tabs[0].tab.click(getTabClickHandler(0));
 		},
 		
+		plugins: {},
 		
-		onExit: function(data) {
-			if (typeof data.signal != 'undefined' && data.signal !== null) {
-				srcjs.console('Process forcefully killed with signal '+data.signal, 'system');
-			} else if (typeof data.code != 'undefined' && data.code !== null) {
-				srcjs.console('Process stopped with exit code '+code, 'system');
-			} else {
-				window.console.log(data);
-				srcjs.console('Process stopped with unknown exit code or was not running (anymore)', 'warn');
-			}
-			srcjs.onStatus(Status.STOPPED);
-		},
-		
-		onStatus: function(status) {
-			if (status == Status.STOPPED) {
-				$('#srcjsBtnStart').attr('disabled', null);
-				$('#srcjsBtnStop').attr('disabled', 'disabled');
-				$('#srcjsBtnInput').attr('disabled', 'disabled');
-			} else {
-				$('#srcjsBtnStart').attr('disabled', 'disabled');
-				$('#srcjsBtnStop').attr('disabled', null);
-				$('#srcjsBtnInput').attr('disabled', null);
-			}
-		},
+		addTab: function(title, panel) {
+			var tab = $('<button>'+title+'</button>');
+			$('.srcjsTabs').append(tab);
+			
+			panel.addClass('srcjsTabPanel');
+			panel.hide();
+			$('.srcjsTabPanels').append(panel)
+			
+			tabs.push({
+				tab: tab,
+				panel: panel,
+			});
+			tab.click(getTabClickHandler(tabs.length - 1));
+		}
 	};
 })();

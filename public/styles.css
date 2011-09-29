@@ -137,11 +137,11 @@ html, body {
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 	background-color: #ddd;
-	padding: 20px;
 	-moz-box-shadow: 0px 0px 20px 0px #000000;
 	box-shadow: 0px 0px 20px 0px #000000;
 }
 	#srcjsLogin {
+		margin: 20px;
 	}
 		#srcjsLogin fieldset {
 			border: none;
@@ -166,11 +166,14 @@ html, body {
 	#srcjsLoginIFrame {
 		display: none;
 	}
-	.srcjs #srcjsInterface {
+	#srcjsInterface {
 		display: none;
 	}
-	.srcjs h1 {
-		margin: 4px;
+	.srcjs > h1 {
+		margin: 24px;
+	}
+	.srcjs > h5 {
+		margin: 10px 20px;
 	}
 	.srcjs button {
 		font-family: 'Aldrich', sans-serif;
@@ -190,8 +193,6 @@ html, body {
 		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f5f5f5), color-stop(100%,#f1f1f1)); /* Chrome,Safari4+ */
 		background: -webkit-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* Chrome10+,Safari5.1+ */
 		background: -o-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* Opera11.10+ */
-		background: -ms-linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* IE10+ */
-		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f5f5f5', endColorstr='#f1f1f1',GradientType=0 ); /* IE6-9 */
 		background: linear-gradient(top, #f5f5f5 0%,#f1f1f1 100%); /* W3C */
 	}
 		.srcjs button:hover {
@@ -265,3 +266,33 @@ html, body {
 		.srcjsIconInput {
 			background-position: -88px 0;
 		}
+
+	.srcjsTabs {
+		padding: 0 20px;
+		border-bottom: 1px solid #bbb;
+		cursor: default;
+		margin-bottom: 20px;
+	}
+		.srcjsTabs button {
+			border-bottom: none;
+			-moz-border-radius-topleft: 2px;
+			-moz-border-radius-topright: 2px;
+			-moz-border-radius-bottomright: 0px;
+			-moz-border-radius-bottomleft: 0px;
+			-webkit-border-radius: 2px 2px 0px 0px;
+			border-radius: 2px 2px 0px 0px;
+			border-color: #aaa;
+			border-left-color: #bbb;
+			border-top-color: #bbb;
+		}
+			.srcjs button.active {
+				border-left-color: #888;
+				border-top-color: #888;
+				border-right-color: #bbb;
+				border-bottom-color: #bbb;
+				-moz-box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.5);
+				box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.25);
+			}
+	.srcjsTabPanels {
+		padding: 0 20px;
+	}
