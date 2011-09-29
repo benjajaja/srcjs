@@ -19,7 +19,10 @@ if (typeof window.jQuery == 'undefined') {
 			});
 		});
 		
-		
+		socket.on('disconnect', function (status) {
+			alert('Disconnected. Please log in again.');
+			window.location.reload();
+		});
 		
 	});
 }

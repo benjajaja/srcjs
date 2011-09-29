@@ -179,7 +179,7 @@ html, body {
 	.srcjs button {
 		color: #444;
 		padding: 4px 8px;
-		font-weight: bold;
+		font-size: 1em;
 		border: 1px solid #aaa;
 		border-left-color: #bbb;
 		border-top-color: #bbb;
@@ -222,7 +222,7 @@ html, body {
 	.srcjsInput {
 	}
 		.srcjsInputWrapper {
-			margin-right: 34px;
+			margin-right: 44px;
 			border: 1px inset #ccc;
 			height: 30px;
 			-moz-box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
@@ -239,7 +239,29 @@ html, body {
 			background-color: transparent;
 		}
 		#srcjsBtnInput {
-			width: 32px;
+			width: 42px;
 			height: 32px;
 			float: right;
+		}
+	.srcjsIcon {
+		width: 22px;
+		height: 22px;
+		background-image: url('icons.png');
+		background-repeat: no-repeat;
+		vertical-align: text-bottom;
+	}
+		.srcjsIconLogin {
+			background-position: 0 0;
+		}
+		.srcjsIconStart {
+			background-position: -22px 0;
+		}
+		.srcjsIconStop {
+			background-position: -44px 0;
+		}
+		.srcjsIconHUP {
+			background-position: -66px 0;
+		}
+		.srcjsIconInput {
+			background-position: -88px 0;
 		}
