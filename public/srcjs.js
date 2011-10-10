@@ -3,6 +3,7 @@ if (typeof window.jQuery == 'undefined') {
 	
 } else {
 	$(document).ready(function() {
+		window.location = '#';
 		var socket = io.connect('/console');
 		socket.on('connected', function (status) {
 			$('#srcjsLoginButton').attr('disabled', null);
@@ -12,6 +13,7 @@ if (typeof window.jQuery == 'undefined') {
 						alert(error);
 					} else {
 						$('#srcjsLogin').hide();
+						setTimeout($('#srcjsLogin').remove, 2000); // let browsers offer to save password
 						$('#srcjsInterface').show();
 						srcjs.init(socket, serverStatus);
 					}
@@ -43,47 +45,14 @@ var srcjs = (function() {
 		}
 		return p_enum;
 	};
+	
+
+	
 	var Status = makeEnum(['STOPPED', 'STARTED']);
 	var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);
 	var console, tabs;
 	
-	var history = (function() {
-		// notice importance of pre- and post-increment on "index" (it's for brevity)
-		var history = [];
-		var index = 0;
-		var size = 0;
-		return {
-			push: function(command) {
-				history[index++] = command;
-				history.splice(index + 1);
-				size++;
-			},
-			back: function(input) {
-				if (index > 0) {
-					input.val(history[--index]);
-				}
-			},
-			forth: function(input) {
-				if (typeof history[index + 1] != 'undefined') {
-					input.val(history[++index]);
-				} else {
-					if (index < size) {
-						index++;
-					}
-					input.val('');
-				}
-			}
-		};
-	})();
 	
-	var input = function(socket) {
-		var command = $('#input').val();
-		if (command != '') {
-			socket.emit('input', command);
-			history.push(command);
-			$('#input').val('');
-		}
-	};
 	
 	var	consoleText = function(text, channel) {
 		var div;
@@ -94,11 +63,8 @@ var srcjs = (function() {
 		}
 		div.text(text);
 		
-		if (console.children().size() > 1000) {
-			console.children().filter(':lt(100)').remove();
-		}
-		console.append(div);
-		console.scrollTop(console[0].scrollHeight);
+		
+		console.append([div]);
 	};
 	
 	var onStatus = function(status) {
@@ -133,7 +99,7 @@ var srcjs = (function() {
 		};
 	};
 	
-	return {
+	var o = {
 		login: function(socket, username, password, cb) {
 			socket.emit('login', {
 				username: username,
@@ -142,7 +108,8 @@ var srcjs = (function() {
 		},
 		
 		init: function(socket, status) {
-			console = $('#srcjsConsole');
+
+			
 			socket.on('started', function() {
 				onStatus(Status.STARTED);
 			});
@@ -154,15 +121,21 @@ var srcjs = (function() {
 					});
 				})(CHANNEL);
 			}
+			
 			socket.on('exit', function(data) {
+				onStatus(Status.STOPPED);
+				
 				if (typeof data.signal != 'undefined' && data.signal !== null) {
-					consoleText('Process forcefully killed with signal '+data.signal, 'system');
+					if (data.signal == 0) {
+						consoleText('Process was not running or not found', 'system');
+					} else {
+						consoleText('Process forcefully killed with signal '+data.signal, 'system');
+					}
 				} else if (typeof data.code != 'undefined' && data.code !== null) {
-					consoleText('Process stopped with exit code '+code, 'system');
+					consoleText('Process stopped with exit code '+data.code, 'system');
 				} else {
 					consoleText('Process stopped with unknown exit code or was not running (anymore)', 'warn');
 				}
-				onStatus(Status.STOPPED);
 			});
 			socket.on('unload', function(data) {
 				for(var name in srcjs.plugins) {
@@ -176,7 +149,7 @@ var srcjs = (function() {
 				}
 				srcjs.plugins = {};
 				$('.srcjsTabs > button:gt(0)').remove();
-				$('.srcjsTabPanels > srcjsTabPanel:gt(0)').remove();
+				$('.srcjsTabPanels > .srcjsTabPanel:gt(0)').remove();
 				tabs.splice(1);
 				socket.emit('unloaded');
 			});
@@ -194,51 +167,58 @@ var srcjs = (function() {
 			});
 			
 			
-			$('#srcjsBtnInput').click(function() {
-				input(socket);
-			});
-			
 			$('#srcjsBtnHUP').click(function() {
 				consoleText('Sending HUP to console...', 'system');
 				socket.emit('HUP');
 			});
 			
-			$('#input').keyup(function(e) {
-				if (e.which == 13) {
-					input(socket);
-				} else if (e.which == 38) {
-					history.back($('#input'));
-				} else if (e.which == 40) {
-					history.forth($('#input'));
-				}
-			});
+			tabs = [];
 			
-			tabs = [{
-				tab: $('.srcjsTabs').children().first(),
-				panel: $('.srcjsTabPanels').children().first(),
-			}];
-			tabs[0].tab.click(getTabClickHandler(0));
+			(function() {
+				var consolePanel = $('<div/>');
+				
+				var buttonPanel = $('<div/>');
+				
+				
+				console = srcjs.ui.Console({
+					title: 'Process I/O',
+					inputListener: function(socket, command) {
+						if (command != '') {
+							socket.emit('input', command);
+							history.push(command);
+							return true;
+						}
+						return false;
+					},
+					height: 400
+				});
+				consolePanel.append(console.panel());
+				o.addTab('Process I/O', consolePanel, true);
+				tabs[0].tab.click();
+			})();
 		},
 		
 		plugins: {},
 		
-		addTab: function(title, panel) {
-			if (typeof title != 'string' || typeof panel != 'object') {
-				window.console.log('incorrect parameter(s) for srcjs.addTab - expected string, element');
-				return;
-			}
+		addTab: function(title, panel, active) {
 			var tab = $('<button>'+title+'</button>');
+			if (active) {
+				tab.addClass('active');
+			}
 			$('.srcjsTabs').append(tab);
 			
-			panel.addClass('srcjsTabPanel');
 			panel.hide();
-			$('.srcjsTabPanels').append(panel)
+			$('.srcjsTabPanels').append(panel);
 			
 			tabs.push({
 				tab: tab,
 				panel: panel,
 			});
 			tab.click(getTabClickHandler(tabs.length - 1));
-		}
+		},
+		
+		
+		
 	};
+	return o;
 })();

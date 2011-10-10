@@ -3,16 +3,21 @@
 <head>
 	<meta ccharset="utf-8"/>
 	<title>srcjs</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="/styles.css" type="text/css"/>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/jquery-1.6.3.min.js"></script>
+	<script src="/splitter.js"></script>
 	<script src="/srcjs.js"></script>
-	<link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono|Aldrich' rel='stylesheet' type='text/css'>
+	<script src="/srcjs-ui.js"></script>
+	<!--<link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono|Aldrich' rel='stylesheet' type='text/css'>-->
 </head>
-<body>
-
-<div class="srcjs">
-	<h1>srcjs - SourceDS JavaScript console</h1>
+<body class="srcjsMPH">
+<div class="srcjs srcjsMPH">
+	<div class="srcjsHeader srcjsMPH">
+		<h1>srcjs - SourceDS JavaScript console</h1>
+	</div>
 	
 	<form method="post" action="/ignoreme" id="srcjsLogin" target="srcjsLoginIFrame">
 		<fieldset>
@@ -29,30 +34,11 @@
 	</form>
 	<iframe id="srcjsLoginIFrame" src="about:blank"></iframe>
 	
-	<div id="srcjsInterface">
+	<div id="srcjsInterface srcjsMPH">
 		<div class="srcjsTabs">
-			<button class="active">Console</button>
 		</div>
 		<div class="srcjsTabPanels">
-			<div class="srcjsTabPanel">
-				<div class="srcjsControl">
-					<div class="srcjsProcessControl">
-						<button id="srcjsBtnStart" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStart"/> Start</button>
-						<button id="srcjsBtnStop" disabled><img src="clear.gif" class="srcjsIcon srcjsIconStop"/> Stop</button>
-					</div>
-					<div class="srcjsAppControl">
-						<button id="srcjsBtnHUP"><img src="clear.gif" class="srcjsIcon srcjsIconHUP"/> HUP</button>
-					</div>
-				</div>
-				<div id="srcjsConsole"></div>
-
-				<div class="srcjsInput">
-					<button id="srcjsBtnInput" disabled><img src="clear.gif" class="srcjsIcon srcjsIconInput"/></button>
-					<div class="srcjsInputWrapper">
-						<input id="input" placeholder="command" title="Use arrow up and down keys to go back through history" autocomplete="off"/>
-					</div>
-				</div>
-			</div>
+			
 		</div>
 	</div>
 	

@@ -2,26 +2,73 @@ var fs = require('fs');
 
 var plugins = [];
 
-var loadPlugin = function(eventBus, io, name) {
+var loadPlugin = function(eventBus, io, name, cb) {
 	fs.stat('./plugins/'+name, function(err, stat) {
 		if (err) {
 			console.error('plugin "'+name+'" not found');
 		} else if (stat.isDirectory()) {
 			try {
-				plugins.push(require('../plugins/'+name+'/plugin')(eventBus, io, name));
+				
+				var module = require.resolve('../plugins/'+name+'/plugin');
+				
+				plugins.push(require(module).load(eventBus, io, name));
+				delete require.cache[module];
+				
 				console.log('Plugin "'+name+'" loaded');
+				cb();
 			} catch (e) {
-				console.err('Cannot load plugin '+name, e); 
+				cb(e);
+				console.error('Cannot load plugin '+name, e.stack); 
 			}
 		}
 	});
 };
 
-module.exports.load = function(list, eventBus, io, cb) {
-	for(var i = 0; i < list.length; i++) {
-		loadPlugin(eventBus, io, list[i]);
-	}
-	cb();
+module.exports.load = function(list, eventBus, app, io, cb) {
+	eventBus.on('addscripts', function(scripts) {
+		console.log('adding scripts:', scripts);
+		for(var i = 0; i < scripts.length; i++) {
+			(function(script) {
+				if (!script.filename) {
+					script.filename = 'client.js';
+				}
+				
+				if (app.lookup.get('/plugins/'+script.plugin+'/'+script.filename).length == 0) {
+					app.get('/plugins/'+script.plugin+'/'+script.filename, function (req, res) {
+						fs.readFile(__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, function(err, data) {
+							if (err) {
+								res.send('not found', 404);
+								console.log('plugin client script not found: '+__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, err);
+								
+							} else {
+								res.send(data.toString());
+							}
+						});
+						
+					});
+					console.log('added route /plugins/'+script.plugin+'/'+script.filename);
+				}
+				
+				//io.of('/console').in('all').emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
+				eventBus.on('userjoin', function(socket) {
+					socket.emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
+				});
+				
+				
+			})(scripts[i]);
+		}
+	});
+	
+	(function loadPluginEach(i) {
+		loadPlugin(eventBus, io, list[i], function(err) {
+		
+			if (i < list.length - 1) {
+				loadPluginEach(++i);
+			} else {
+				cb(list);
+			}
+		});
+	})(0);
 };
 
 module.exports.unload = function(eventBus, cb) {
@@ -43,6 +90,7 @@ module.exports.unload = function(eventBus, cb) {
 					eventBus.removeAllListeners('procstop');
 					eventBus.removeAllListeners('userjoin');
 					eventBus.removeAllListeners('userleave');
+					eventBus.removeAllListeners('addscripts');
 					plugins = [];
 					cb();
 				}
@@ -56,6 +104,7 @@ module.exports.unload = function(eventBus, cb) {
 				eventBus.removeAllListeners('procstop');
 				eventBus.removeAllListeners('userjoin');
 				eventBus.removeAllListeners('userleave');
+				eventBus.removeAllListeners('addscripts');
 				plugins = [];
 				cb(plugins);
 			}

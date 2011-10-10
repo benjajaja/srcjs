@@ -3,29 +3,31 @@ var cp = require('child_process');
 
 // always kill proc hierarchy
 var kill = function(pid, signal, cb) {
+	console.log('kill #'+pid+' with '+signal);
 	// is it running?
 	cp.exec('kill -0 '+pid, function (error, stdout, stderr) {
 		if (!error) {
 			// kill process hierarchy by parent pid (kills childs)
 			cp.exec('pkill -'+signal+' -P '+pid, function (error, stdout, stderr) {
 				if (!error) {
-					// now kill the original process
-					cp.exec('kill -'+signal+' '+pid, function (error, stdout, stderr) {
-						if (!error) {
-							cb(null, signal);
-						} else {
-							cb('killed child processes, but cannot kill process '+pid);
-						}
-					});
-				} else {
-					cb('cannot kill process '+pid);
+					console.log('cannot pkill -P #'+pid);
 				}
+				// now kill the original process
+				cp.exec('kill -'+signal+' '+pid, function (error, stdout, stderr) {
+					if (!error) {
+						cb(null, signal);
+					} else {
+						cb('cannot kill process '+pid);
+						console.log('cannot pkill -P #'+pid, error);
+					}
+				});
+				
 			});
 		} else {
 			// not running
 			// TODO: remove pidfile
 			console.log('cannot kill process #'+pid+': is not running');
-			cb();
+			cb(null, 0);
 		}
 	});
 };

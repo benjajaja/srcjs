@@ -88,58 +88,32 @@ html, body {
 	font-size: 16px;
 	font-family: 'Aldrich', sans-serif;
 	text-shadow: 1px 1px 2px #022747;
+	height: 100%;
+}
+body {
+	padding: 20px;
 }
 
 
-#srcjsConsole {
-	width: 100%;
-	border: none;
-	margin: 0;
-	padding: 0;
-	height: 600px;
-	background-color: #000;
-	font-family: 'Droid Sans Mono', sans-serif;
-	font-size: 12px;
-	text-shadow: none;
-	margin-bottom: 4px;
-	overflow: auto;
-	overflow-y: scroll;
-}
-	#srcjsConsole div {
-		white-space: pre;
-		color: #81F7F3;
-	}
-		#srcjsConsole div.error {
-			color: #faa;
-		}
-		#srcjsConsole div.system {
-			color: #2EFE2E;
-		}
-		#srcjsConsole div.warn {
-			color: #F7FE2E;
-			font-weight: bold;
-		}
-	#srcjsConsole::-webkit-scrollbar {
-		width: 10px;
-		height: 12px;
-	}
-	#srcjsConsole::-webkit-scrollbar-track {
-		background-color: #000;
-	}
-	#srcjsConsole::-webkit-scrollbar-thumb {
-		border-radius: 10px;
-		background: rgba(255,255,255,0.75);
-		margin: 0 1px;
-	}
 
 .srcjs {
-	margin: 20px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 	background-color: #ddd;
 	-moz-box-shadow: 0px 0px 20px 0px #000000;
 	box-shadow: 0px 0px 20px 0px #000000;
+	min-height: 100%;
 }
+	.srcjsMPH {
+		-moz-box-sizing: border-box;
+		-ms-box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+		overflow: auto;
+	}
+	.srcjsHeader {
+	}
+	
 	#srcjsLogin {
 		margin: 20px;
 	}
@@ -213,24 +187,124 @@ html, body {
 			-moz-box-shadow: none;
 			box-shadow: none;
 		}
-	.srcjsControl {
-		padding: 2px 0;
+
+.srcjsRound {
+	-moz-border-radius: .6em;
+	border-radius: .6em;
+	-moz-background-clip: padding;
+	background-clip: padding-box;
+}
+.srcjsRoundTop {
+	-moz-border-radius-topleft: .6em;
+	border-top-left-radius: .6em;
+	-moz-border-radius-topright: .6em;
+	border-top-right-radius: .6em;
+	-moz-background-clip: padding;
+	background-clip: padding-box;
+}
+.srcjsRoundBottom {
+	-moz-border-radius-bottomleft: .6em;
+	border-bottom-left-radius: .6em;
+	-moz-border-radius-bottomright: .6em;
+	border-bottom-right-radius: .6em;
+	-moz-background-clip: padding;
+	background-clip: padding-box;
+}
+.srcjsPanel {
+	background-color: #fff;
+}
+	.srcjsPanel h3 {
+		border: 1px solid #456F9A;
+		border-bottom: none;
+		background: #5E87B0;
+		color: white;
+		text-shadow: 0 -1px 1px #254F7A;
+		margin: 0;
+		padding: .5em 15px;
+		font-size: 14px;
+		font-weight: bold;
+		background-image: -webkit-linear-gradient(top,#81a8ce,#5e87b0);
+		background-image: -moz-linear-gradient(top,#81a8ce,#5e87b0);
+		background-image: -ms-linear-gradient(top,#81a8ce,#5e87b0);
+		background-image: -o-linear-gradient(top,#81a8ce,#5e87b0);
+		background-image: linear-gradient(top,#81a8ce,#5e87b0);
 	}
-		.srcjsProcessControl, .srcjsAppControl {
-			display: inline;
-			margin-right: 10px;
+	.srcjsPanel h6 {
+		border: 1px solid #aaa;
+		border-top: none;
+		margin: 0;
+		padding: .5em 15px;
+		background: #ffffff; /* Old browsers */
+		background: -moz-linear-gradient(top, #ffffff 0%, #e5e5e5 100%); /* FF3.6+ */
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5)); /* Chrome,Safari4+ */
+		background: -webkit-linear-gradient(top, #ffffff 0%,#e5e5e5 100%); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, #ffffff 0%,#e5e5e5 100%); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, #ffffff 0%,#e5e5e5 100%); /* IE10+ */
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* IE6-9 */
+		background: linear-gradient(top, #ffffff 0%,#e5e5e5 100%); /* W3C */
+	}
+	
+	
+.srcjsSplitPanel {
+	overflow: auto;
+}
+	.srcjsSplitPanel > * {
+		display: block;
+		float: left;
+	}
+	
+.srcjsConsole {
+}
+	.srcjsConsoleLines {
+		width: 100%;
+		border: none;
+		margin: 0;
+		padding: 0;
+		min-height: 100px;
+		background-color: #000;
+		font-family: 'Droid Sans Mono', sans-serif;
+		font-size: 12px;
+		text-shadow: none;
+		overflow: auto;
+		overflow-y: scroll;
+	}
+		.srcjsConsoleLines div {
+			white-space: pre;
+			color: #81F7F3;
+		}
+			.srcjsConsoleLines div.error {
+				color: #faa;
+			}
+			.srcjsConsoleLines div.system {
+				color: #2EFE2E;
+			}
+			.srcjsConsoleLines div.warn {
+				color: #F7FE2E;
+				font-weight: bold;
+			}
+		.srcjsConsoleLines::-webkit-scrollbar {
+			width: 10px;
+			height: 12px;
+		}
+		.srcjsConsoleLines::-webkit-scrollbar-track {
+			background-color: #000;
+		}
+		.srcjsConsoleLines::-webkit-scrollbar-thumb {
+			border-radius: 10px;
+			background: rgba(255,255,255,0.75);
+			margin: 0 1px;
 		}
 	.srcjsInput {
 	}
 		.srcjsInputWrapper {
-			margin-right: 44px;
+			margin-right: 42px;
 			border: 1px inset #ccc;
 			height: 30px;
 			-moz-box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
 			box-shadow: inset 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
 			background-color: #fff;
 		}
-		#input {
+		.srcjsInputWrapper input {
 			display: block;
 			width: 100%;
 			height: 100%;
@@ -239,11 +313,21 @@ html, body {
 			font-family: 'Droid Sans Mono', sans-serif;
 			background-color: transparent;
 		}
-		#srcjsBtnInput {
+		.srcjsInputButton {
 			width: 42px;
 			height: 32px;
 			float: right;
 		}
+		
+
+	.srcjsControl {
+		padding: 2px 0;
+	}
+		.srcjsProcessControl, .srcjsAppControl {
+			display: inline;
+			margin-right: 10px;
+		}
+
 	.srcjsIcon {
 		width: 22px;
 		height: 22px;

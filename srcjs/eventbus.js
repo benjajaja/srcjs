@@ -10,37 +10,8 @@ EventBus.prototype = Object.create(require('events').EventEmitter.prototype, {
 	}
 });
 
-module.exports = function(app) {
+module.exports = function() {
 	var eventBus = new EventBus();
-	eventBus.on('addscripts', function(scripts) {
-		for(var i = 0; i < scripts.length; i++) {
-			(function(script) {
-				if (!script.filename) {
-					script.filename = 'client.js';
-				}
-				
-				console.log('added route /plugins/'+script.plugin+'/'+script.filename);
-				if (app.lookup.get('/plugins/'+script.plugin+'/'+script.filename).length == 0) {
-					app.get('/plugins/'+script.plugin+'/'+script.filename, function (req, res) {
-						fs.readFile(__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, function(err, data) {
-							if (err) {
-								res.send('not found', 404);
-								console.log('plugin client script not found: '+__dirname+'/../plugins/'+script.plugin+'/client/'+script.filename, err);
-								
-							} else {
-								res.send(data.toString());
-							}
-						});
-						
-					});
-				}
-				
-				eventBus.on('userjoin', function(socket) {
-					socket.emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
-				});
-				
-			})(scripts[i]);
-		}
-	});
+	
 	return eventBus;
 };

@@ -2,6 +2,7 @@ var fs = require('fs');
 var cp = require('child_process');
 var start = require('./start');
 var stop = require('./stop');
+var plugins = require('./plugins');
 
 // these here are global, so we can reload them easily without having to cancel callbacks etc:
 var options, configFilename;
@@ -40,14 +41,18 @@ var getStatus = function(proc, filename, cb) {
 	}
 };
 
-var loadPlugins = function(proc, pluginEventBus, io, cb) {
-	require('./plugins').load(options.plugins, pluginEventBus, io, function(plugins) {
+var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
+	plugins.load(options.plugins, pluginEventBus, app, io, function(plugins) {
 		getStatus(proc, options.pidFilename, function(status, isUnattached) {
+			if (socket) {
+				pluginEventBus.emit('userjoin', socket);
+			}
 			if (status == Status.STARTED) {
 				pluginEventBus.emit('procstart', isUnattached);
 			} else {
 				pluginEventBus.emit('procstop');
 			}
+			console.log('plugins loaded, userjoin '+(socket?'emitted':'NOT emitted')+', proc'+(status==Status.STARTED?'start':'stop')+' emitted', plugins);
 			if (cb) {
 				cb();
 			}
@@ -56,7 +61,7 @@ var loadPlugins = function(proc, pluginEventBus, io, cb) {
 };
 
 var unloadPlugins = function(pluginEventBus, socket) {
-	require('./plugins').unload(pluginEventBus, function() {
+	plugins.unload(pluginEventBus, function() {
 		socket.emit('unload', 'plugins');
 	});
 	
@@ -79,6 +84,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 
 	var proc = null;
 	var procInterval = null;
+	
+	var onProcData = function(data, channel) {
+		io.of('/console').in('all').volatile.emit(channel.toLowerCase() /* türk i? */, data);
+	};
 
 	io.configure(function() {
 		io.set('log level', 1);
@@ -162,15 +171,13 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	
 
 	
-	var pluginEventBus = require('./eventbus')(app);
+	var pluginEventBus = require('./eventbus')();
 
-	loadPlugins(proc, pluginEventBus, io);
+	loadPlugins(proc, pluginEventBus, app, io);
 	
 	
 
-	var onProcData = function(data, channel) {
-		io.of('/console').in('all').volatile.emit(channel.toLowerCase() /* türk i? */, data);
-	};
+
 
 	var onProcExit = function(code, signal) {
 		io.of('/console').in('all').emit('exit', {code: code, signal: signal});
@@ -219,6 +226,9 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		return false;
 	};
 	
+	/*
+	 * "Hangup" command should reload config AND plugins on the fly
+	 */
 	var HUP = function(socket, cb) {
 		readOptions(configFilename, function() {
 			if (options.process.ioInterval > 0) {
@@ -229,10 +239,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 			
 			var onUnloaded = function() {
 				socket.removeListener('unloaded', onUnloaded);
-				loadPlugins(proc, pluginEventBus, io, function() {
-					pluginEventBus.emit('userjoin', socket);
-					cb();
-				});
+				loadPlugins(proc, pluginEventBus, app, io, socket, cb);
 			};
 			socket.on('unloaded', onUnloaded);
 			unloadPlugins(pluginEventBus, socket);
