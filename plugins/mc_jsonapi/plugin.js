@@ -16,55 +16,73 @@ exports.load = function(eventBus, io, name) {
 		userjoin ()
 		userleave ()
 	*/
+	
+	var onJsonConnected = function(status) {
+		if (status === true) {
+			pluginio.emit('data', '[jsonapi] connected');
+			
+			json.on('error', function(message, error) {
+				//console.log('jsonapi error "'+message+'"', error);
+				pluginio.emit('error', message);
+				console.log('json error:', message, error);
+			});
+			
+			json.on('getPlayers', function(players) {
+				pluginio.emit('players', players);
+			});
+			
+			json.on('console', function(data) {
+				pluginio.emit('console', data);
+			});
+			
+			json.on('chat', function(data) {
+				pluginio.emit('chat', data);
+			});
+			
+			json.on('connection', function(data) {
+				pluginio.emit('connection', data);
+			});
+			
+			// get full playerlist in an interval
+			interval = setInterval(function() {
+				json.runMethod('getPlayers');
+			}, 10000);
+			
+			
+			json.subscribe('console');
+			json.subscribe('chat');
+			json.subscribe('connections'); // doesn't fucking work
+		}
+	};
+	
 	eventBus.on('procstart', function(isUnattached) {
-		
-		json.connect(5, 4, function(status) {
-			if (status === true) {
-				pluginio.emit('data', '[jsonapi] connected');
-				
-				json.on('error', function(message, error) {
-					//console.log('jsonapi error "'+message+'"', error);
-					pluginio.emit('error', message);
-				});
-				
-				json.on('getPlayers', function(players) {
-					pluginio.emit('players', players);
-				});
-				
-				json.on('console', function(data) {
-					pluginio.emit('console', data);
-				});
-				
-				json.on('chat', function(data) {
-					pluginio.emit('chat', data);
-				});
-				
-				json.on('connection', function(data) {
-					pluginio.emit('connection', data);
-				});
-				
-				// get full playerlist in 5 minute interval
-				interval = setInterval(function() {
-					json.runMethod('getPlayers');
-				}, 10000);
-				setTimeout(function() {
-					json.runMethod('getPlayers');	
-				}, 1000);
-				
-				json.subscribe('console');
-				json.subscribe('chat');
-				json.subscribe('connections');
-			}
-		});
+		if (userCount > 0) {
+			console.log('connecting jsonapi due to proc start and some users');
+			json.connect(5, 4, onJsonConnected);
+		}
 	});
 	eventBus.on('procstop', function() {
-		pluginio.emit('data', name+': game is stopped');
+		clearInterval(interval);
+		json.unload();
 	});
+	var userCount = 0;
 	eventBus.on('userjoin', function(socket) {
-		pluginio.emit('data', name+': User joined');
+		userCount++;
+		if (userCount === 1) {
+			console.log('connecting jsonapi due to first user');
+			json.connect(5, 4, onJsonConnected);
+			setTimeout(function() {
+				json.runMethod('getPlayers');	
+			}, 1000);
+		}
 	});
 	eventBus.on('userleave', function() {
-		pluginio.emit('data', name+': User left');
+		userCount--;
+		if (userCount === 0) {
+			console.log('unload jsonapi due to lack of users');
+			clearInterval(interval);
+			json.unload();
+		}
 	});
 
 	eventBus.on('procstop', function() {
@@ -76,6 +94,11 @@ exports.load = function(eventBus, io, name) {
 		socket.on('chat', function(data) {
 			if (!json.runMethod('runConsoleCommand', ['say '+data])) {
 				console.log('could not send chat command to socket');
+			}
+		});
+		socket.on('console', function(data) {
+			if (!json.runMethod('runConsoleCommand', [data])) {
+				console.log('could not send console command to socket');
 			}
 		});
 	});

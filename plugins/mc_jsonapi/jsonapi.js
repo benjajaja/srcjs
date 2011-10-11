@@ -72,13 +72,18 @@ var JSONAPIConnection = function(port, username, password, salt) {
 		
 		if (buffer[buffer.length - 1] == 10) { // line feed
 			var lines = buffer.toString().split('\n');
-			buffer = null;
 			
 			for(var i = 0; i < lines.length - 1; i++) {
 				cb(lines[i]);
 			}
+			
+			buffer = null;
 		} else {
-			console.log('interrupted data at '+buffer.length);
+			var lines = buffer.toString().split('\n');
+			for(var i = 0; i < lines.length - 1; i++) {
+				cb(lines[i]);
+			}
+			console.log('interrupted data at '+buffer.length+', flushed '+lines.length+' lines');
 			
 		}
 	};
@@ -108,13 +113,17 @@ var JSONAPIConnection = function(port, username, password, salt) {
 									if (!result.result || result.result != 'success') {
 										onError('result is not "success"', result);
 										
-									} else if (!result.source || !result.success) {
-										onError('result is "success", but data is incomplete', result);
+									} else if (!result.source || result.success === false) {
+										onError('result is "success", but "source" or "success" not set', result);
 										
 									} else {
 										if (listeners[result.source]) {
-											for(var j = 0; j < listeners[result.source].length; j++) {
-												listeners[result.source][j](result.success);
+											if (result.source != null && typeof listeners[result.source] != 'undefined') {	
+												for(var j = 0; j < listeners[result.source].length; j++) {
+													listeners[result.source][j](result.success);
+												}
+											} else {
+												console.log('jsonapi: no listeners for source type "'+result.source+'".');
 											}
 										}
 									}
@@ -153,7 +162,7 @@ var JSONAPIConnection = function(port, username, password, salt) {
 				socket.write(data);
 				return data;
 			} else {
-				console.log('jsonapi runMethod: socket is null!');
+				console.trace('jsonapi runMethod: socket is null!');
 				return false;
 			}
 		},

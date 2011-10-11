@@ -243,7 +243,11 @@ body {
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* IE6-9 */
 		background: linear-gradient(top, #ffffff 0%,#e5e5e5 100%); /* W3C */
 	}
-	
+	.srcjsPanelBody {
+		border: 1px solid #aaa;
+		border-top: none;
+		border-bottom: none;
+	}
 	
 .srcjsSplitPanel {
 	overflow: auto;
@@ -318,8 +322,51 @@ body {
 			height: 32px;
 			float: right;
 		}
-		
-
+.srcjsListBox {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+	.srcjsListBox li {
+		display: block;
+		padding: .7em 15px;
+		border-top: 1px solid #CCC;
+		background: #EEE;
+		font-weight: bold;
+		color: #444;
+		text-shadow: 0 1px 1px #F6F6F6;
+		background-image: -webkit-gradient(linear,left top,left bottom,from(#fdfdfd),to(#eee));
+		background-image: -webkit-linear-gradient(top,#fdfdfd,#eee);
+		background-image: -moz-linear-gradient(top,#fdfdfd,#eee);
+		background-image: -ms-linear-gradient(top,#fdfdfd,#eee);
+		background-image: -o-linear-gradient(top,#fdfdfd,#eee);
+		background-image: linear-gradient(top,#fdfdfd,#eee);
+		font-family: Helvetica,Arial,sans-serif;
+	}
+	.srcjsListBox li:last-child {
+		border-bottom: 1px solid #CCC;
+	}
+.srcjsListBoxFormatted {
+	display: table;
+	width: 100%;
+}
+	.srcjsListBoxFormatted li {
+		display: table-row;
+	}
+		.srcjsListBoxFormatted li > * {
+			display: table-cell;
+			padding: .7em 0;
+		}
+		.srcjsListBoxFormatted li > *:first-child {
+			padding-left: 15px;
+		}
+		.srcjsListBoxFormatted li > *:last-child {
+			padding-right: 15px;
+		}
+		.srcjsListBoxFormatted li img {
+			vertical-align: middle;
+		}
+	
 	.srcjsControl {
 		padding: 2px 0;
 	}

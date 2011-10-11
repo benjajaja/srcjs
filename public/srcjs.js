@@ -64,18 +64,20 @@ var srcjs = (function() {
 		div.text(text);
 		
 		
-		console.append([div]);
+		console.addLines([div]);
 	};
+	
+	var btnStart, btnStop, btnHUP;
 	
 	var onStatus = function(status) {
 		if (status == Status.STOPPED) {
-			$('#srcjsBtnStart').attr('disabled', null);
-			$('#srcjsBtnStop').attr('disabled', 'disabled');
-			$('#srcjsBtnInput').attr('disabled', 'disabled');
+			btnStart.attr('disabled', null);
+			btnStop.attr('disabled', 'disabled');
+			btnHUP.attr('disabled', 'disabled');
 		} else {
-			$('#srcjsBtnStart').attr('disabled', 'disabled');
-			$('#srcjsBtnStop').attr('disabled', null);
-			$('#srcjsBtnInput').attr('disabled', null);
+			btnStart.attr('disabled', 'disabled');
+			btnStop.attr('disabled', null);
+			btnHUP.attr('disabled', null);
 		}
 		
 		for(var name in srcjs.plugins) {
@@ -154,23 +156,8 @@ var srcjs = (function() {
 				socket.emit('unloaded');
 			});
 			
-			onStatus(status);
-			
-			$('#srcjsBtnStart').click(function() {
-				consoleText('Starting server...', 'system');
-				socket.emit('start');
-			});
-			
-			$('#srcjsBtnStop').click(function() {
-				consoleText('Stopping server...', 'system');
-				socket.emit('stop');
-			});
 			
 			
-			$('#srcjsBtnHUP').click(function() {
-				consoleText('Sending HUP to console...', 'system');
-				socket.emit('HUP');
-			});
 			
 			tabs = [];
 			
@@ -178,7 +165,20 @@ var srcjs = (function() {
 				var consolePanel = $('<div/>');
 				
 				var buttonPanel = $('<div/>');
-				
+				btnStart = $('<button disabled>Start</button>').click(function() {
+					consoleText('Starting server...', 'system');
+					socket.emit('start');
+				});
+				btnStop = $('<button disabled>Stop</button>').click(function() {
+					consoleText('Stopping server...', 'system');
+					socket.emit('stop');
+				});
+				btnHUP = $('<button disabled>HUP</button>').click(function() {
+					consoleText('Sending HUP to console...', 'system');
+					socket.emit('HUP');
+				});
+				buttonPanel.append(btnStart, btnStop, btnHUP);
+				consolePanel.append(buttonPanel);
 				
 				console = srcjs.ui.Console({
 					title: 'Process I/O',
@@ -196,6 +196,8 @@ var srcjs = (function() {
 				o.addTab('Process I/O', consolePanel, true);
 				tabs[0].tab.click();
 			})();
+			
+			onStatus(status);
 		},
 		
 		plugins: {},
