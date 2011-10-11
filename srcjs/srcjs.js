@@ -10,6 +10,7 @@ var options, configFilename;
 var Status = makeEnum(['STOPPED', 'STARTED']);
 var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);
 
+// makes a nice java-like enum, with properties resolving to their own names (to print them, for example)
 function makeEnum(array) {
 	// enum is a reserved word (in browser environments)
 	var p_enum = {};
@@ -44,6 +45,7 @@ var getStatus = function(proc, filename, cb) {
 var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
 	plugins.load(options.plugins, pluginEventBus, app, io, function(plugins) {
 		getStatus(proc, options.pidFilename, function(status, isUnattached) {
+			// this is a bit fuzzy. "socket" and "cb" are optional, called when reloading plugins.
 			if (socket) {
 				pluginEventBus.emit('userjoin', socket);
 			}
@@ -52,7 +54,7 @@ var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
 			} else {
 				pluginEventBus.emit('procstop');
 			}
-			console.log('plugins loaded, userjoin '+(socket?'emitted':'NOT emitted')+', proc'+(status==Status.STARTED?'start':'stop')+' emitted', plugins);
+			console.log('plugins loaded');
 			if (cb) {
 				cb();
 			}
@@ -108,11 +110,14 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 				console.log('username "'+data.username+'" doesn\'t even match '+username, data.username != username, data.username, username);
 				
 			} else {
+				// obviously won't work on windows. do we really expect someone to run this on windows?
 				unixlib.pamauth('system-auth', data.username, data.password, function(result) {
 					if (!result) {
 						cb(warnings.incorrectLogin);
 					} else {
-						socket.join('all');
+						// hook socket up to everything initally
+						socket.join('all'); // this is NOT actually needed nor useful;
+											// should use io.of('/console').emit instead of io.of('/console').in('all').emit
 						pluginEventBus.emit('userjoin', socket);
 						
 						getStatus(proc, options.pidFilename, function(status, isUnattached) {
@@ -207,7 +212,8 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	var clearProcInterval = function() {
 		if (procInterval !== null) {
 			clearInterval(procInterval);
-			procInterval = null;
+			console.log('clearProcInterval(): procInterval after clearInterval is:', procInterval);
+			procInterval = null; // is this necessary? check console for line above
 		}
 	};
 
@@ -219,7 +225,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 				proc.stdin.write(string+'\n');
 				return true;
 			} catch (e) {
-				console.error('proc not null but stdin socket not writable');
+				console.error('proc not null but stdin socket not writable!');
 				return false;
 			}
 		}
@@ -250,6 +256,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	
 };
 
+// read config file
 var readOptions = function(filename, cb) {
 	fs.readFile(filename, function(err, data) {
 	if (err) throw err;

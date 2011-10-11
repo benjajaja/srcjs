@@ -179,6 +179,7 @@ var JSONAPIConnection = function(port, username, password, salt) {
 		
 		unload: function() {
 			clearTimeout(timer);
+			listeners = [];
 			if (socket !== null) {
 				socket.end();
 				closeConnection(socket);

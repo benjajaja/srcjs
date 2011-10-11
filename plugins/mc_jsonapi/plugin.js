@@ -1,3 +1,4 @@
+var http = require('http');
 var JSONAPI = require('./jsonapi');
 	
 exports.load = function(eventBus, io, name) {
@@ -7,7 +8,67 @@ exports.load = function(eventBus, io, name) {
 	
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
-	eventBus.emit('addscripts', [{plugin: name}]);
+	eventBus.emit('addscripts', [{plugin: name}, {plugin: name, filename: 'minecraftskin.js'}]);
+	
+	var skinCache = {};
+	var downloadSkin = function(url, response) {
+		if (skinCache[url]) {
+			response.write(skinCache[url], 'binary');
+			response.end();
+			
+		} else {
+			var options = {
+				host: url.substring(0, url.indexOf('/')),
+				port: 80,
+				path: url.substring(url.indexOf('/')),
+			}
+			var req = http.request(options, function(res) {
+				var cache = '';
+				
+				res.setEncoding('binary')
+				
+				if (res.statusCode == 200) {	
+					res.on('data', function (chunk) {
+						cache += chunk;
+						response.write(chunk, 'binary');
+						
+					});
+				}
+				res.on('end', function () {
+					if (res.statusCode == 200) {
+						response.end();
+						skinCache[url] = cache;
+						// cache clear timeout:
+						setTimeout(function() {
+							delete skinCache[url];
+						}, 10000);
+						
+					} else if (res.statusCode == 302) {
+						var location = res.headers.location;
+						if (location.indexOf('://') != -1) {
+							location = location.substring(location.indexOf('://') + 3);
+						}
+						downloadSkin(location, response);
+					} else {
+						response.end();
+					}
+				});
+			});
+			req.on('error', function(e) {
+				response.end(e.toString());
+			});
+			req.end();
+			
+		}
+	};
+	eventBus.emit('addroutes', [{
+		plugin: name,
+		path: 'skin/:skin',
+		callback: function(req, res) {
+			res.header('Content-Type', 'image/png');
+			downloadSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res);
+		}
+	}]);
 	
 	
 	/* the following events are available:
@@ -17,6 +78,7 @@ exports.load = function(eventBus, io, name) {
 		userleave ()
 	*/
 	
+	// TODO: make jsonDisconnect function, remove pluginio listeners
 	var onJsonConnected = function(status) {
 		if (status === true) {
 			pluginio.emit('data', '[jsonapi] connected');

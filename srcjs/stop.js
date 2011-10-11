@@ -1,6 +1,9 @@
 var fs = require('fs');
 var cp = require('child_process');
 
+// TODO: somehow identify process and kill forcefully, even if not running or proc with given pid not found.
+// let config.json define how to identofy the process (nightmarish?)
+
 // always kill proc hierarchy
 var kill = function(pid, signal, cb) {
 	console.log('kill #'+pid+' with '+signal);

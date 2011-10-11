@@ -1,5 +1,4 @@
 // please use srcjs.plugins.PLUGINNAME as your namespace
-// implement onStatus(status) to be notified of start/stop status
 
 srcjs.plugins.mc_jsonapi = (function() {
 
@@ -40,20 +39,16 @@ srcjs.plugins.mc_jsonapi = (function() {
 		
 		
 		var links = [];
-		var playerList = srcjs.ui.ListBoxFormatted({
+		var playerList = srcjs.ui.ListBoxLinksFormatted({
 			title: 'Players',
 			links: links,
 			formatColumns: function(index, item) {
-				var field = $('<span/>');
-				field.css({width: '24%'}); // 96 / 4
 				switch(index) {
 					case 0:
-						field.text(item == true ? '@' : '');
-						field.css({width: '4%'});
-						break;
+						return item == true ? '@' : '';
 					
 					case 3:
-						field.text(item+'/20');
+						return item+'/20';
 						break;
 					
 					case 4:
@@ -63,15 +58,20 @@ srcjs.plugins.mc_jsonapi = (function() {
 							img.attr('src', 'http://www.minecraftdatavalues.com/images/'+(item < 256 ? '1' : '2')+'/'+item+'_0.png');
 						}
 						img.attr('src', 'http://www.minecraftdatavalues.com/images/'+(item < 256 ? '1' : '2')+'/'+item+'.png');
-						field.append(img);
-						break;
+						return img;
 					
 					default:
-						field.text(item);
-						break;
+						return item;
 				};
-				
-				return field;
+			},
+			getItemView: function(index) {
+				return {
+					element: srcjs.plugins.mc_jsonapi.minecraftskin.panel(links[index][1]),
+					title: links[index][1],
+					onRemove: function(callback) {
+						callback();
+					}
+				};
 			}
 		});
 		splitPanel.append(playerList.panel());

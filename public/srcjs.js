@@ -46,7 +46,7 @@ var srcjs = (function() {
 		return p_enum;
 	};
 	
-
+	
 	
 	var Status = makeEnum(['STOPPED', 'STARTED']);
 	var Channels = makeEnum(['WARN', 'STDOUT', 'STDERR', 'SYSTEM']);

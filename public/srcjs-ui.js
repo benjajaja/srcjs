@@ -1,6 +1,17 @@
+/**
+ * Some UI stuff like pretty boxes, lists, a console, dividing panels
+ * By convention, inheritance with protected-like visibility is achieved with
+ * closures and a "spec" parameter to constructor calls.
+ * Said "spec" is optionally defined and accessed from a class that wishes to
+ * expose a method only to sub-classes but not to the outside.
+ * Any srcjs.ui.* constructor shoudl return an object with at least a method
+ * "panel" which sould return the main widget/element, and in most cases, a
+ * method "append".
+ */
 srcjs.ui = (function() {
-	
-		var TextboxHistory = function() {
+
+	// private to all members of package
+	var TextboxHistory = function() {
 		// notice importance of pre- and post-increment on "index" (it's for brevity)
 		var history = [];
 		var index = 0;
@@ -76,8 +87,24 @@ srcjs.ui = (function() {
 			return o;
 		},
 		
+		/**
+		 * "Box" has a header and a footer with some nice css.
+		 * There is a css class "srcjsPanelBody" which is suitable for elements
+		 * that are appended to it.
+		 */
 		Box: function(options, spec) {
 			spec = spec || {};
+			spec.setTitle = spec.setTitle || function(title) {
+				titleBar.text(title);
+			};
+			spec.setTitleButton = spec.setTitleButton || function(icon, handler, text) {
+				text = text || titleBar.text();
+				titleBar.html('');
+				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'">&lt;</a>').click(handler));
+				if (text) {
+					titleBar.append(text);
+				}
+			};
 			var div = $('<div class="srcjsPanel srcjsRound"/>');
 			if (options.classNames) {
 				$(options.classNames).each(function(i, className) {
@@ -98,6 +125,7 @@ srcjs.ui = (function() {
 			div.append(footer);
 			
 			var o = {};
+			// protected methods:
 			o.panel = spec.panel || function() {
 				return div;
 			};
@@ -107,57 +135,105 @@ srcjs.ui = (function() {
 			return o;
 		},
 		
+		/**
+		 * Simple readonly list of strings
+		 */
 		ListBox: function(options, spec) {
 			spec = spec || {};
+			// get inner content
 			spec.getItem = spec.getItem || function(item) {
 				return $('<span class="srcjsListBoxItem"/>').text(item);
-				//return $('<a href="#" class="srcjsListBoxItem">'+item+'</a>');
 			};
+			// get <li> wrapper, with custom styles or events
+			spec.getListItem = spec.getListItem || function(index) {
+				return $('<li/>');
+			};
+			spec.list = $('<ul class="srcjsPanelBody srcjsListBox"/>');
+			
 			var box = srcjs.ui.Box(options, spec);
 			
-			var list = $('<ul class="srcjsPanelBody srcjsListBox"/>');
+			
 			if (spec.listBoxClassNames) {
 				$(spec.listBoxClassNames).each(function(i, className) {
-					list.addClass(className);
+					spec.list.addClass(className);
 				});
 			}
-			box.append(list);
+			box.append(spec.list);
 			
+			// set items to list of strings
 			box.set = function(items) {
-				list.html('');
+				spec.list.html('');
 				$(items).each(function(i, item) {
-					/*var anchor = $('<a href="#" class="srcjsListBoxItem">'+item+'</a>');
-					anchor.click(function() {
-					});*/
-					var li = $('<li/>');
+					var li = spec.getListItem(i);
 					$(spec.getItem(item)).each(function(i, item) {
 						li.append(item);
 					});
-					list.append(li);
+					spec.list.append(li);
 				});
 			};
 			
 			return box;
 		},
 		
+		/**
+		 * Column-formatted readonly list, wih custom formatting callback
+		 * options.formatColumns accepts index (to tell column) and a string parameter
+		 * andmust return a new element.
+		 */
 		ListBoxFormatted: function(options, spec) {
 			spec = spec || {};
 			spec.listBoxClassNames = ['srcjsListBoxFormatted'];
 			options.formatColumns = options.formatColumns || function(index, item) {
-				return $('<span class="srcjsListBoxItem"/>').text(item);
+				return item;
 			};
 			spec.getItem = spec.getItem || function(item) {
 				var data = [];
 				for(var i = 0; i < item.length; i++) {
-					data[i] = options.formatColumns(i, item[i]);
+					data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i]));
+					
 				}
 				return data;
-				//return $('<a href="#" class="srcjsListBoxItem">'+item+'</a>');
 			};
 			return srcjs.ui.ListBox(options, spec);
 		},
 		
-		/*
+		ListBoxLinksFormatted: function(options, spec) {
+			spec = spec || {};
+			spec.getListItem = spec.getListItem || function(index) {
+				return $('<li/>').click(function() {
+					list.openItem(index);
+				});
+			};
+			
+			var list = srcjs.ui.ListBoxFormatted(options, spec);
+			
+			list.openItem = function(index) {
+				spec.list.detach();
+				var onRemoveCallback = function() {
+				};
+				var body = $('<div class="srcjsPanelBody"/>');
+				
+				var view = options.getItemView(index);
+				
+				list.append(body.append(view.element));
+				spec.setTitleButton('back', function() {
+					spec.setTitle(options.title);
+					if (view.onRemove) {
+						view.onRemove(function() {
+							body.remove();
+							list.append(spec.list);
+						});
+					} else {
+						body.remove();
+						list.append(spec.list);
+					}
+				}, view.title);
+			};
+			return list;
+		},
+		
+		
+		/**
 		 * Get a console in a box, ready with command history etc.
 		 * inputListener will be called when enter is pressed on input; it must return boolean false if the input field
 		 * should NOT be cleared
@@ -173,7 +249,7 @@ srcjs.ui = (function() {
 			
 			var box = srcjs.ui.Box(options, spec);
 
-			/*
+			/**
 			 * Add a line of text, an element, or an array of elements
 			 */
 			box.addLines = function(data) {
@@ -182,15 +258,16 @@ srcjs.ui = (function() {
 					div.text(data);
 				} else if (typeof data == 'object') {
 					if (typeof data.length != 'undefined') {
-						for(var i = 0; i < data.length; i++) {
-							div.append(data[i]);
-						}
+						$(data).each(function(index, element) {
+							div.append(element);
+						});
 					} else {
 						div.append(data[i]);
 					}
 				} else {
 					div.text(data.toString());
 				}
+				// limit scroll history
 				if (lineDiv.children().size() > 1000) {
 					lineDiv.children().filter(':lt(100)').remove();
 				}
@@ -200,11 +277,12 @@ srcjs.ui = (function() {
 			
 			
 			height = typeof options.height != 'undefined' ? options.height : 100;
-			height -= 30 + 10; // take off top and bottom bar
+			height -= 30 + 10; // take off top and bottom bar - yes, this bad practice
 			
 			var lineDiv = $('<div class="srcjsConsoleLines"/>');
 			box.append(lineDiv);
 			
+			// if no inputlistener, assume that console is read only
 			if (options.inputListener) {
 				var inputDiv = $('<div class="srcjConsoleInput"/>');
 				
