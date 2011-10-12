@@ -1,12 +1,13 @@
-var net = require('net');
-var ctype = require('ctype');
+var srcds = require('srcds');
 
 module.exports.load = function(eventBus, io, name) {
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
 	eventBus.emit('addscripts', [{plugin: name}]);
+	var pluginio = io.of('/'+name);
 	
-	var rcon = Rcon('nohayclavequevalga', 'acechadores.com');
+	var rcon = new srcds.RCon('acechadores.com', 27015);
+	
 	
 	/* the following events are available:
 		procstart(isUnattached)
@@ -15,17 +16,19 @@ module.exports.load = function(eventBus, io, name) {
 		userleave()
 	*/
 	eventBus.on('procstart', function(isUnattached) {
-		rcon.connect(1, 5)
-		io.of('/rcon').emit('data', name+': game is started '+(isUnattached?'(unattached)':''));
+		rcon.auth('nohayclavequevalga', function(err) {
+			if (err)
+		});
+		pluginio.emit('data', name+': game is started '+(isUnattached?'(unattached)':''));
 	});
 	eventBus.on('procstop', function() {
-		io.of('/rcon').emit('data', name+': game is stopped');
+		pluginio.emit('data', name+': game is stopped');
 	});
 	eventBus.on('userjoin', function(socket) {
-		io.of('/rcon').emit('data', name+': User joined');
+		pluginio.emit('data', name+': User joined');
 	});
 	eventBus.on('userleave', function() {
-		io.of('/rcon').emit('data', name+': User left');
+		pluginio.emit('data', name+': User left');
 	});
 	
 	
@@ -36,7 +39,6 @@ module.exports.load = function(eventBus, io, name) {
 	return {
 		name: name,
 		unload: function(cb) {
-			//io.of('/rcon').removeAllListeners('connection');
 			cb();
 		},
 	};
