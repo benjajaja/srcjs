@@ -1,5 +1,5 @@
 var http = require('http');
-var JSONAPI = require('./jsonapi');
+var JSONAPI = require('mc_jsonapi');
 	
 exports.load = function(eventBus, io, name) {
 	var interval;

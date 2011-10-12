@@ -1,28 +1,24 @@
 var net = require("net");
 var crypto = require('crypto');
 
-var username = 'minejson';
-var password = 'morodebits';
-var salt = 'no me gusta el curry';
-
-var getKey = function(methodName) {
+var getKey = function(methodName, username, password, salt) {
 	var shasum = crypto.createHash('sha256');
 	shasum.update(username + methodName + password + salt);
 	return shasum.digest('hex');
 };
 
-var getLineCall = function(method, args) {
+var getLineCall = function(method, args, username, password, salt) {
 	var line = '/api/call?method='+method;
 	if (args) {
 		line += '&args='+escape(JSON.stringify(args));
 	}
-	line += '&key='+getKey(method)+'\n';
+	line += '&key='+getKey(method, username, password, salt)+'\n';
 	return line;
 };
 
-var getLineSubscribe = function(channel) {
+var getLineSubscribe = function(channel, username, password, salt) {
 	var line = '/api/subscribe?source='+channel;
-	line += '&key='+getKey(channel)+'\n';
+	line += '&key='+getKey(channel, username, password, salt)+'\n';
 	return line;
 };
 
@@ -41,9 +37,11 @@ var createConnection = function(port, host, cb) {
 };
 
 var closeConnection = function(socket) {
-	socket.removeAllListeners('data');
-	socket.removeAllListeners('end');
-	socket.removeAllListeners('error');
+	if (socket !== null) {
+		socket.removeAllListeners('data');
+		socket.removeAllListeners('end');
+		socket.removeAllListeners('error');
+	}
 };
 
 
@@ -158,7 +156,7 @@ var JSONAPIConnection = function(port, username, password, salt) {
 		
 		runMethod: function(method, args) {
 			if (socket !== null) {
-				var data = getLineCall(method, args);
+				var data = getLineCall(method, args, username, password, salt);
 				socket.write(data);
 				return data;
 			} else {
@@ -169,7 +167,7 @@ var JSONAPIConnection = function(port, username, password, salt) {
 		
 		subscribe: function(channel) {
 			if (socket !== null) {
-				var data = getLineSubscribe(channel);
+				var data = getLineSubscribe(channel, username, password, salt);
 				socket.write(data);
 				return data;
 			} else {

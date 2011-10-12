@@ -1408,6 +1408,7 @@ vTextureCoord = aTextureCoord;\n\
 	$(document.body).append(shitHole);
 	
 	var canvas = $('<canvas id="skin-preview" width="350" height="500">');
+	//canvas.css({display: 'block'});
 	shitHole.append(canvas);
 	var img = $('<img id="skin-preview-img" src="http://johndrinkwater.name/examples/webgl/minecraft/i/3d-tease.png" width="350" height="500" alt="Minecraft Default Skin Preview" />');
 	canvas.append(img);
@@ -1422,14 +1423,13 @@ vTextureCoord = aTextureCoord;\n\
 	shitHole.append(container);
 	init();
 	
-	
+	var intval = null;
 	return {
 		panel: function(playerName) {
 			
 			
 			
 			var div = $('<div/>');
-			div.append(playerName);
 			
 			
 			
@@ -1445,6 +1445,7 @@ vTextureCoord = aTextureCoord;\n\
 				clientX: 0,
 				clientY: 0
 			};
+			stopRotatingDude();
 			startRotatingDude(e);
 			
 			$(document).mousemove(function(event) {
@@ -1454,9 +1455,9 @@ vTextureCoord = aTextureCoord;\n\
 				} else if (e.clientY > 50) {
 					e.clientY = 50;
 				}
-				console.log(e.clientY);
 			});
-			setInterval(function() {
+			clearInterval(intval);
+			intval = setInterval(function() {
 				e.clientX += 1;
 				if (e.clientX >= 360) {
 					e.clientX = 0;
