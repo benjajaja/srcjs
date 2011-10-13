@@ -1,10 +1,16 @@
 var http = require('http');
 var JSONAPI = require('mc_jsonapi');
 	
-module.exports = function(eventBus, io, name) {
+module.exports = function(eventBus, io, name, config) {
+	config = config || {};
+	config.port = typeof config.port != 'undefined' ? config.port : 20060;
+	config.username = typeof config.username != 'undefined' ? config.username : 'usernameGoesHere';
+	config.password = typeof config.password != 'undefined' ? config.password : 'passwordGoesHere';
+	config.salt = typeof config.salt != 'undefined' ? config.salt : 'salt goes here';
+	
 	var interval;
 	var pluginio = io.of('/'+name);
-	var json = JSONAPI(20060, 'minejson', 'morodebits', 'no me gusta el curry');
+	var json = JSONAPI(config.port, config.username, config.password, config.salt);
 	
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/

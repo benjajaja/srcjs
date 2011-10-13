@@ -1,0 +1,25 @@
+{
+	"port": 80,
+	"process": {
+		"chdir": "../srcds/css/orangebox",
+		"command": "./srcds_run",
+		"arguments": ["-console", "-game css", "+map de_dust2", "+maxplayers 16", "-autoupdate", "-norestart", "-port 27015"],
+		"setsid": true,
+		"ioInterval": 2000,
+		"stop": [
+			{"input": "say SERVER RESTART FROM CONSOLE, 3"},
+			{"input": "say SERVER RESTART FROM CONSOLE, 2", "timeout": 1000},
+			{"input": "say SERVER RESTART FROM CONSOLE, 1", "timeout": 1000},
+			{"input": "say SERVER RESTART FROM CONSOLE, 0", "timeout": 1000},
+			{"input": "quit"},
+			{"signal": 9, "timeout": 5000}
+		]
+	},
+	"pidFilename": "proc.pid",
+	"plugins": ["srcrcon"],
+	"plugin": {
+		"srcrcon": {
+			"password": "yourRconPassword"
+		}
+	}
+}

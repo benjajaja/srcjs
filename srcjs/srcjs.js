@@ -45,7 +45,7 @@ var getStatus = function(proc, filename, cb) {
 };
 
 var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
-	plugins.load(options.plugins, pluginEventBus, app, io, function(plugins) {
+	plugins.load(options.plugins, pluginEventBus, app, io, options.plugin, function(plugins) {
 		getStatus(proc, options.pidFilename, function(status, isUnattached) {
 			// this is a bit fuzzy. "socket" and "cb" are optional, called when reloading plugins.
 			if (socket) {

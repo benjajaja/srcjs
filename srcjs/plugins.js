@@ -2,7 +2,7 @@ var fs = require('fs');
 
 var plugins = [];
 
-var loadPlugin = function(eventBus, io, name, cb) {
+var loadPlugin = function(eventBus, io, name, pluginConfig, cb) {
 	fs.stat('./plugins/'+name, function(err, stat) {
 		if (err) {
 			console.error('plugin "'+name+'" not found');
@@ -10,7 +10,7 @@ var loadPlugin = function(eventBus, io, name, cb) {
 			try {
 				// load module and clear cache inmediately to be able to reload on HUP
 				var module = require.resolve('../plugins/'+name+'/plugin');
-				plugins.push(require(module)(eventBus, io, name));
+				plugins.push(require(module)(eventBus, io, name, pluginConfig));
 				delete require.cache[module];
 				
 				console.log('Plugin "'+name+'" loaded');
@@ -23,10 +23,9 @@ var loadPlugin = function(eventBus, io, name, cb) {
 	});
 };
 
-module.exports.load = function(list, eventBus, app, io, cb) {
+module.exports.load = function(list, eventBus, app, io, config, cb) {
 	// let plugins load additional client side code
 	eventBus.on('addscripts', function(scripts) {
-		console.log('adding scripts:', scripts);
 		for(var i = 0; i < scripts.length; i++) {
 			(function(script) {
 				if (!script.filename) {
@@ -72,7 +71,8 @@ module.exports.load = function(list, eventBus, app, io, cb) {
 	
 	// now load all plugins
 	(function loadPluginEach(i) {
-		loadPlugin(eventBus, io, list[i], function(err) {
+		var pluginConfig = config ? config[list[i]] : null;
+		loadPlugin(eventBus, io, list[i], pluginConfig, function(err) {
 		
 			if (i < list.length - 1) {
 				loadPluginEach(++i);
