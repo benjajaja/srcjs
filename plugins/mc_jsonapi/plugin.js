@@ -1,7 +1,7 @@
 var http = require('http');
 var JSONAPI = require('mc_jsonapi');
 	
-exports.load = function(eventBus, io, name) {
+module.exports = function(eventBus, io, name) {
 	var interval;
 	var pluginio = io.of('/'+name);
 	var json = JSONAPI(20060, 'minejson', 'morodebits', 'no me gusta el curry');
@@ -74,8 +74,7 @@ exports.load = function(eventBus, io, name) {
 	/* the following events are available:
 		procstart (isUnattached)
 		procstop ()
-		userjoin ()
-		userleave ()
+		connection ()
 	*/
 	
 	// TODO: make jsonDisconnect function, remove pluginio listeners
@@ -128,19 +127,14 @@ exports.load = function(eventBus, io, name) {
 		json.unload();
 	});
 	var userCount = 0;
-	eventBus.on('userjoin', function(socket) {
-		userCount++;
-		if (userCount === 1) {
+	eventBus.on('connection', function(hasUsers) {
+		if (hasUsers) {
 			console.log('connecting jsonapi due to first user');
 			json.connect(5, 4, onJsonConnected);
 			setTimeout(function() {
 				json.runMethod('getPlayers');	
 			}, 1000);
-		}
-	});
-	eventBus.on('userleave', function() {
-		userCount--;
-		if (userCount === 0) {
+		} else {
 			console.log('unload jsonapi due to lack of users');
 			clearInterval(interval);
 			json.unload();

@@ -1,6 +1,6 @@
 var srcds = require('srcds');
 
-module.exports.load = function(eventBus, io, name) {
+module.exports = function(eventBus, io, name) {
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
 	eventBus.emit('addscripts', [{plugin: name}]);
@@ -12,23 +12,18 @@ module.exports.load = function(eventBus, io, name) {
 	/* the following events are available:
 		procstart(isUnattached)
 		procstop()
-		userjoin()
-		userleave()
+		connection(hasUsers)
 	*/
 	eventBus.on('procstart', function(isUnattached) {
 		rcon.auth('nohayclavequevalga', function(err) {
-			if (err)
+			if (err) {
+				console.log('could not connect to rcon');
+			}
 		});
 		pluginio.emit('data', name+': game is started '+(isUnattached?'(unattached)':''));
 	});
 	eventBus.on('procstop', function() {
 		pluginio.emit('data', name+': game is stopped');
-	});
-	eventBus.on('userjoin', function(socket) {
-		pluginio.emit('data', name+': User joined');
-	});
-	eventBus.on('userleave', function() {
-		pluginio.emit('data', name+': User left');
 	});
 	
 	

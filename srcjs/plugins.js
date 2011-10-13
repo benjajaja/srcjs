@@ -10,7 +10,7 @@ var loadPlugin = function(eventBus, io, name, cb) {
 			try {
 				// load module and clear cache inmediately to be able to reload on HUP
 				var module = require.resolve('../plugins/'+name+'/plugin');
-				plugins.push(require(module).load(eventBus, io, name));
+				plugins.push(require(module)(eventBus, io, name));
 				delete require.cache[module];
 				
 				console.log('Plugin "'+name+'" loaded');
@@ -90,8 +90,8 @@ module.exports.unload = function(eventBus, cb) {
 	var removePluginEventBusListeners = function() {
 		eventBus.removeAllListeners('procstart');
 		eventBus.removeAllListeners('procstop');
+		eventBus.removeAllListeners('connection');
 		eventBus.removeAllListeners('userjoin');
-		eventBus.removeAllListeners('userleave');
 		eventBus.removeAllListeners('addscripts');
 		eventBus.removeAllListeners('addroutes');
 		// TODO: remove app routes too!

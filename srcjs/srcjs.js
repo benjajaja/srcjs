@@ -3,6 +3,8 @@ var cp = require('child_process');
 var start = require('./start');
 var stop = require('./stop');
 var plugins = require('./plugins');
+var unixlib = require('unixlib');
+var socketio = require('socket.io');
 
 // these here are global, so we can reload them easily without having to cancel callbacks etc:
 var options, configFilename;
@@ -47,7 +49,7 @@ var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
 		getStatus(proc, options.pidFilename, function(status, isUnattached) {
 			// this is a bit fuzzy. "socket" and "cb" are optional, called when reloading plugins.
 			if (socket) {
-				pluginEventBus.emit('userjoin', socket);
+				pluginEventBus.emit('connection', true);
 			}
 			if (status == Status.STARTED) {
 				pluginEventBus.emit('procstart', isUnattached);
@@ -70,9 +72,7 @@ var unloadPlugins = function(pluginEventBus, socket) {
 };
 
 var srcjsStart = function(app, username) {
-	var io = require('socket.io').listen(app);
-	
-	var unixlib = require('unixlib');
+	var io = socketio.listen(app);
 	
 	var warnings = {
 		runningUnattached: 'Server appears to be running, but is unattached to process - possibly because srcjs has been restarted or crashed.\n\
@@ -86,9 +86,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 
 	var proc = null;
 	var procInterval = null;
+	var userCount = 0;
 	
 	var onProcData = function(data, channel) {
-		io.of('/console').in('all').volatile.emit(channel.toLowerCase() /* türk i? */, data);
+		io.of('/console').volatile.emit(channel.toLowerCase() /* türk i? */, data);
 	};
 
 	io.configure(function() {
@@ -115,10 +116,12 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 					if (!result) {
 						cb(warnings.incorrectLogin);
 					} else {
-						// hook socket up to everything initally
-						socket.join('all'); // this is NOT actually needed nor useful;
-											// should use io.of('/console').emit instead of io.of('/console').in('all').emit
 						pluginEventBus.emit('userjoin', socket);
+						if (userCount == 0) {
+							pluginEventBus.emit('connection', true);
+						}
+						userCount++;
+						
 						
 						getStatus(proc, options.pidFilename, function(status, isUnattached) {
 							cb(false, status);
@@ -142,7 +145,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 									if (options.process.ioInterval > 0) {
 										setProcInputInterval(options.process.ioInterval);
 									}
-									io.of('/console').in('all').emit('started');
+									io.of('/console').emit('started');
 									pluginEventBus.emit('procstart');
 								}
 							);
@@ -151,7 +154,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 							var manualOnProcExit = (proc === null);
 							stop(proc, options, function(err, signal) {
 								if (err) {
-									io.of('/console').in('all').emit('warn', warnings.stopError);
+									io.of('/console').emit('warn', warnings.stopError);
 								} else if (manualOnProcExit) {
 									onProcExit(0, signal);
 								}
@@ -165,7 +168,11 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 						});
 						
 						socket.on('disconnect', function () {
-							pluginEventBus.emit('userleave');
+							userCount--;
+							if (userCount <= 0) {
+								userCount = 0;
+								pluginEventBus.emit('connection', false);
+							}
 						});
 					}
 				});
@@ -185,7 +192,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 
 
 	var onProcExit = function(code, signal) {
-		io.of('/console').in('all').emit('exit', {code: code, signal: signal});
+		io.of('/console').emit('exit', {code: code, signal: signal});
 		if (proc !== null) {
 			proc.removeAllListeners('exit');
 			proc.stdout.removeAllListeners('data');
