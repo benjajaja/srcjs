@@ -1,9 +1,9 @@
-var fs = require('fs');
+var events = require('events');
 
 var EventBus = function() {
-	require('events').EventEmitter.call(this);
+	events.EventEmitter.call(this);
 };
-EventBus.prototype = Object.create(require('events').EventEmitter.prototype, {
+EventBus.prototype = Object.create(events.EventEmitter.prototype, {
 	constructor: {
 		value: EventBus,
 		enumerable: false
