@@ -100,7 +100,7 @@ srcjs.ui = (function() {
 			spec.setTitleButton = spec.setTitleButton || function(icon, handler, text) {
 				text = text || titleBar.text();
 				titleBar.html('');
-				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'">&lt;</a>').click(handler));
+				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'"></a>').click(handler));
 				if (text) {
 					titleBar.append(text);
 				}
@@ -141,7 +141,7 @@ srcjs.ui = (function() {
 		ListBox: function(options, spec) {
 			spec = spec || {};
 			// get inner content
-			spec.getItem = spec.getItem || function(item) {
+			spec.getItem = spec.getItem || function(item, index) {
 				return $('<span class="srcjsListBoxItem"/>').text(item);
 			};
 			// get <li> wrapper, with custom styles or events
@@ -165,7 +165,7 @@ srcjs.ui = (function() {
 				spec.list.html('');
 				$(items).each(function(i, item) {
 					var li = spec.getListItem(i);
-					$(spec.getItem(item)).each(function(i, item) {
+					$(spec.getItem(item, i)).each(function(i, item) {
 						li.append(item);
 					});
 					spec.list.append(li);
@@ -182,14 +182,19 @@ srcjs.ui = (function() {
 		 */
 		ListBoxFormatted: function(options, spec) {
 			spec = spec || {};
-			spec.listBoxClassNames = ['srcjsListBoxFormatted'];
-			options.formatColumns = options.formatColumns || function(index, item) {
+			if (spec.listBoxClassNames) {
+				spec.listBoxClassNames.push('srcjsListBoxFormatted');
+			} else {
+				spec.listBoxClassNames = ['srcjsListBoxFormatted'];
+			}
+
+			options.formatColumns = options.formatColumns || function(index, item, listIndex) {
 				return item;
 			};
-			spec.getItem = spec.getItem || function(item) {
+			spec.getItem = spec.getItem || function(item, index) {
 				var data = [];
 				for(var i = 0; i < item.length; i++) {
-					data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i]));
+					data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i], index));
 					
 				}
 				return data;
@@ -199,6 +204,11 @@ srcjs.ui = (function() {
 		
 		ListBoxLinksFormatted: function(options, spec) {
 			spec = spec || {};
+			if (spec.listBoxClassNames) {
+				spec.listBoxClassNames.push('srcjsListBoxLinksFormatted');
+			} else {
+				spec.listBoxClassNames = ['srcjsListBoxLinksFormatted'];
+			}
 			spec.getListItem = spec.getListItem || function(index) {
 				return $('<li/>').click(function() {
 					list.openItem(index);

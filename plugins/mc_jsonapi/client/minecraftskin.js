@@ -1087,7 +1087,6 @@ vTextureCoord = aTextureCoord;\n\
 		loadedImage = true;
 
 		if (fWebGLSupport) {
-			console.log('upodating texture');
 			updateTexture();
 		} else {
 			console.log('no fWebGLSupport');
@@ -1363,7 +1362,7 @@ vTextureCoord = aTextureCoord;\n\
 			holder.replaceChild(temp, skinpreview);
 
 			temp.id = 'skin-preview';
-			temp.width = '350px'; temp.height = '500px';
+			temp.width = '140px'; temp.height = '200px';
 			if ( skinpreview.hasChildNodes() ) {
 				while ( skinpreview.childNodes.length >= 1 ) {
 					temp.appendChild( skinpreview.removeChild( skinpreview.firstChild ) );
@@ -1407,10 +1406,10 @@ vTextureCoord = aTextureCoord;\n\
 	var shitHole = $('<div style="display: none"/>');
 	$(document.body).append(shitHole);
 	
-	var canvas = $('<canvas id="skin-preview" width="350" height="500">');
+	var canvas = $('<canvas id="skin-preview" width="140" height="200">');
 	//canvas.css({display: 'block'});
 	shitHole.append(canvas);
-	var img = $('<img id="skin-preview-img" src="http://johndrinkwater.name/examples/webgl/minecraft/i/3d-tease.png" width="350" height="500" alt="Minecraft Default Skin Preview" />');
+	var img = $('<img id="skin-preview-img" src="http://johndrinkwater.name/examples/webgl/minecraft/i/3d-tease.png" width="140" height="200" alt="Minecraft Default Skin Preview" />');
 	canvas.append(img);
 	
 	var skinEditor = $('<canvas id="skin-editor" width="512" height="256">')[0];
@@ -1421,13 +1420,18 @@ vTextureCoord = aTextureCoord;\n\
 	
 	var container = $('<div id="container"/>')[0];
 	shitHole.append(container);
-	init();
+	
+	var initiated = false;
 	
 	var intval = null;
 	return {
 		panel: function(playerName) {
 			
-			
+			if (!initiated) {
+				init();
+				initiated = true;
+			}
+			loadSkinInSkins('default');
 			
 			var div = $('<div/>');
 			
@@ -1437,7 +1441,6 @@ vTextureCoord = aTextureCoord;\n\
 			shitHole.append(newskin);
 			newskin.onload = loadNewSkin;
 			$(newskin).bind('load', function() {
-				console.log('skin loaded');
 				$.proxy(loadNewSkin, newskin);
 			});
 			
@@ -1448,14 +1451,14 @@ vTextureCoord = aTextureCoord;\n\
 			stopRotatingDude();
 			startRotatingDude(e);
 			
-			$(document).mousemove(function(event) {
+			/*$(document).mousemove(function(event) {
 				e.clientY = event.clientY - canvas.offset().top;
 				if (e.clientY < -50) {
 					e.clientY = -50;
 				} else if (e.clientY > 50) {
 					e.clientY = 50;
 				}
-			});
+			});*/
 			clearInterval(intval);
 			intval = setInterval(function() {
 				e.clientX += 1;
@@ -1465,15 +1468,6 @@ vTextureCoord = aTextureCoord;\n\
 				captureCursorLocation(e);
 			}, 10);
 			
-			/*skinpreview.addEventListener('mousedown',		startRotatingDude, true);
-			skinpreview.addEventListener('doubleclick',		toggleAnimation, true);
-			skinpreview.addEventListener('mouseup',			stopRotatingDude, true);
-			skinpreview.addEventListener('mouseout',		stopRotatingDude, true);
-			// TODO Stewart suggested to put this on document, so you can leave the preview and still drag.
-			// need to verify that mouseup on document wouldnt break anything
-			skinpreview.addEventListener('mousemove',		captureCursorLocation, true);*/
-			
-			//newskin.src = 'http://www.minecraft.net/skin/'+playerName+'.png';
 			newskin.src = 'plugins/mc_jsonapi/skin/'+playerName;
 			
 			div.append(canvas);

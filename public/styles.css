@@ -84,25 +84,16 @@ a {
 html, body {
 	font-family: Arial, Helvetica, sans-serif, Tahoma;
 	color: #000;
-	background-color: #888;
+	background-color: #fff;
 	font-size: 16px;
 	font-family: 'Aldrich', sans-serif;
 	text-shadow: 1px 1px 2px #022747;
 	height: 100%;
 }
-body {
-	padding: 20px;
-}
 
 
 
 .srcjs {
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	background-color: #ddd;
-	-moz-box-shadow: 0px 0px 20px 0px #000000;
-	box-shadow: 0px 0px 20px 0px #000000;
-	min-height: 100%;
 }
 	.srcjsMPH {
 		-moz-box-sizing: border-box;
@@ -210,6 +201,24 @@ body {
 	-moz-background-clip: padding;
 	background-clip: padding-box;
 }
+.srcjsPanelTitleIcon {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	background: #666;
+	background: rgba(0, 0, 0, .4);
+	background-image: url(icons.png);
+	background-repeat: no-repeat;
+	-moz-border-radius: 9px;
+	border-radius: 9px;
+	-moz-box-shadow: 0 1px 0 rgba(255,255,255,.4);
+	box-shadow: 0 1px 0 rgba(255,255,255,.4);
+	margin: 0 10px -3px -10px;
+	cursor: pointer;
+}
+	.srcjsPanelTitleIcon-back {
+		background-position: 0px -22px;
+	}
 .srcjsPanel {
 	background-color: #fff;
 }
@@ -352,10 +361,12 @@ body {
 }
 	.srcjsListBoxFormatted li {
 		display: table-row;
+		border: none;
 	}
 		.srcjsListBoxFormatted li > * {
 			display: table-cell;
 			padding: .7em 0;
+			border-top: 1px solid #CCC;
 		}
 		.srcjsListBoxFormatted li > *:first-child {
 			padding-left: 15px;
@@ -366,6 +377,77 @@ body {
 		.srcjsListBoxFormatted li img {
 			vertical-align: middle;
 		}
+	.srcjsListBox li:last-child > * {
+		border-bottom: 1px solid #CCC;
+	}
+.srcjsListBoxLinksFormatted {
+}
+	.srcjsListBoxLinksFormatted li {
+		cursor: pointer;
+	}
+		.srcjsListBoxLinksFormatted li:hover {
+background: #eeeeee;
+background: -moz-linear-gradient(top, #eeeeee 0%, #e2e2e2 100%);
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eeeeee), color-stop(100%,#e2e2e2));
+background: -webkit-linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
+background: -o-linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
+background: -ms-linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#e2e2e2',GradientType=0 );
+background: linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
+		}
+		.srcjsListBoxLinksFormatted li:active {
+			background-image: -webkit-gradient(linear,left top,left bottom,from(#eee),to(#fdfdfd));
+			background-image: -webkit-linear-gradient(top,#eee,#fdfdfd);
+			background-image: -moz-linear-gradient(top,#eee,#fdfdfd);
+			background-image: linear-gradient(top,#eee,#fdfdfd);
+		}
+	
+.srcjsLoadGraph {
+	height: 100px;
+	position: relative;
+}
+	.srcjsLoadGraphLegend {
+		height: 1px;
+		width: 100%;
+		background: #aaa;
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 1;
+	}
+	.srcjsLoadGraphLegend-25 {
+		top: 75%;
+	}
+	.srcjsLoadGraphLegend-50 {
+		top: 50%;
+	}
+	.srcjsLoadGraphLegend-75 {
+		top: 25%;
+	}
+	.srcjsLoadGraphContainer {
+		height: 100%;
+		background-color: black;
+		z-index: 0;
+	}
+	.srcjsLoadGraphTick {
+		display: inline-block;
+		margin: 0 1%;
+		width: 3%;
+		height: 100%;
+		position: relative;
+	}
+	.srcjsLoadGraphTickFill {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		display: inline-block;
+		height: 100%;
+		width: 100%;
+		-moz-border-radius: 4px;
+		border-radius: 4px;
+		z-index: 4;
+		background-color: #c00;
+	}
 	
 	.srcjsControl {
 		padding: 2px 0;
@@ -425,5 +507,11 @@ body {
 				box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.25);
 			}
 	.srcjsTabPanels {
+		width: 960px;
+		margin: 0 auto;
 		padding: 0 20px;
 	}
+	
+.srcjsInventory {
+	border-collapse: collapse;
+}

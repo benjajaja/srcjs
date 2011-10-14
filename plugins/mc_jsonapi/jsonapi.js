@@ -81,20 +81,20 @@ var JSONAPIConnection = function(host, port, username, password, salt) {
 			for(var i = 0; i < lines.length - 1; i++) {
 				cb(lines[i]);
 			}
-			console.log('interrupted data at '+buffer.length+', flushed '+lines.length+' lines');
+			//console.log('interrupted data at '+buffer.length+', flushed '+lines.length+' lines');
 			
 		}
 	};
 	
 	return {
 		connect: function(timeout, retries, cb) {
-			console.log('connect to '+host+':'+port);
+			//console.log('connect to localhost:'+port);
 			var connect = function() {
 				createConnection(port, host, function(err, nsocket) {
 					if (err) {
 						//console.log(err);
 						if (retries > 0) {
-							console.log('connection failure, retrying...');
+							//console.log('connection failure, retrying...');
 							retries--;
 							timer = setTimeout(connect, timeout * 1000);
 						} else {
@@ -108,26 +108,29 @@ var JSONAPIConnection = function(host, port, username, password, salt) {
 							pushData(data, function(line) {
 								try {
 									var result = JSON.parse(line);
-									if (!result.result || result.result != 'success') {
-										onError('result is not "success"', result);
-										
-									} else if (!result.source || result.success === false) {
-										onError('result is "success", but "source" or "success" not set', result);
-										
-									} else {
-										if (listeners[result.source]) {
-											if (result.source != null && typeof listeners[result.source] != 'undefined') {	
-												for(var j = 0; j < listeners[result.source].length; j++) {
-													listeners[result.source][j](result.success);
-												}
-											} else {
-												console.log('jsonapi: no listeners for source type "'+result.source+'".');
+								} catch (e) {
+									onError('cannot parse JSON string ('+line+')', e);
+								}
+								
+									
+								if (!result.result || result.result != 'success') {
+									onError('result is not "success"', result);
+									
+								} else if (!result.source || result.success === false) {
+									onError('result is "success", but "source" or "success" not set', result);
+									
+								} else {
+									if (listeners[result.source]) {
+										if (result.source != null && typeof listeners[result.source] != 'undefined') {	
+											for(var j = 0; j < listeners[result.source].length; j++) {
+												listeners[result.source][j](result.success);
 											}
+										} else {
+											onError('jsonapi: no listeners for source type "'+result.source+'".');
 										}
 									}
-								} catch (e) {
-									onError('cannot parse JSON string "'+line+'"', e);
 								}
+								
 							});
 							
 						});
@@ -160,7 +163,6 @@ var JSONAPIConnection = function(host, port, username, password, salt) {
 				socket.write(data);
 				return data;
 			} else {
-				console.trace('jsonapi runMethod: socket is null!');
 				return false;
 			}
 		},
@@ -183,6 +185,13 @@ var JSONAPIConnection = function(host, port, username, password, salt) {
 				closeConnection(socket);
 				socket = null;
 			}
+		},
+		
+		removeListener: function(event, listener) {
+			if (!listeners[event]) {
+				listeners[event] = [];
+			}
+			listeners[event].slice(listeners[event].indexOf(listener), 1);
 		}
 	};
 };
