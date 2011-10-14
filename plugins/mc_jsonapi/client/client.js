@@ -81,6 +81,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 				marginBottom: '5px'
 			}
 		});
+		pluginList.getBody().css({overflow: 'auto', height: '400px'});
 		leftDiv.append(pluginList.panel);
 		
 		

@@ -148,7 +148,7 @@ srcjs.ui = (function() {
 			spec.getListItem = spec.getListItem || function(index) {
 				return $('<li/>');
 			};
-			spec.list = $('<ul class="srcjsPanelBody srcjsListBox"/>');
+			spec.list = $('<ul class="srcjsListBox"/>');
 			
 			var box = srcjs.ui.Box(options, spec);
 			
@@ -158,7 +158,9 @@ srcjs.ui = (function() {
 					spec.list.addClass(className);
 				});
 			}
-			box.append(spec.list);
+			
+			var body = $('<div class="srcjsPanelBody"/>');
+			box.append(body.append(spec.list));
 			
 			// set items to list of strings
 			box.set = function(items) {
@@ -170,6 +172,10 @@ srcjs.ui = (function() {
 					});
 					spec.list.append(li);
 				});
+			};
+			
+			box.getBody = function() {
+				return body;
 			};
 			
 			return box;
