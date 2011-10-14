@@ -46,7 +46,7 @@ var closeConnection = function(socket) {
 
 
 
-var JSONAPIConnection = function(port, username, password, salt) {
+var JSONAPIConnection = function(host, port, username, password, salt) {
 	var socket = null;
 	var timer = null;
 	var listeners = {'error': []};
@@ -88,9 +88,9 @@ var JSONAPIConnection = function(port, username, password, salt) {
 	
 	return {
 		connect: function(timeout, retries, cb) {
-			console.log('connect to localhost:'+port);
+			console.log('connect to '+host+':'+port);
 			var connect = function() {
-				createConnection(port, 'localhost', function(err, nsocket) {
+				createConnection(port, host, function(err, nsocket) {
 					if (err) {
 						//console.log(err);
 						if (retries > 0) {

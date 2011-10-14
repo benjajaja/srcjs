@@ -1,10 +1,13 @@
 var fs = require('fs');
 var cp = require('child_process');
+var socketio = require('socket.io');
 var start = require('./start');
 var stop = require('./stop');
 var plugins = require('./plugins');
-var unixlib = require('unixlib');
-var socketio = require('socket.io');
+var login = require('./login.js');
+
+
+
 
 // these here are global, so we can reload them easily without having to cancel callbacks etc:
 var options, configFilename;
@@ -111,8 +114,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 				console.log('username "'+data.username+'" doesn\'t even match '+username, data.username != username, data.username, username);
 				
 			} else {
-				// obviously won't work on windows. do we really expect someone to run this on windows?
-				unixlib.pamauth('system-auth', data.username, data.password, function(result) {
+				login.login(data.username, data.password, function(result) {
 					if (!result) {
 						cb(warnings.incorrectLogin);
 					} else {
@@ -263,11 +265,10 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 	
 };
 
-// read config file
+// read config file into "options" global
 var readOptions = function(filename, cb) {
 	fs.readFile(filename, function(err, data) {
 	if (err) throw err;
-
 		options = JSON.parse(data.toString())
 		cb();
 	});

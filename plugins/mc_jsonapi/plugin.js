@@ -1,8 +1,9 @@
 var http = require('http');
-var JSONAPI = require('mc_jsonapi');
+var JSONAPI = require('./jsonapi');
 	
 module.exports = function(eventBus, io, name, config) {
 	config = config || {};
+	config.hostname = typeof config.hostname != 'undefined' ? config.hostname : 20060;
 	config.port = typeof config.port != 'undefined' ? config.port : 20060;
 	config.username = typeof config.username != 'undefined' ? config.username : 'usernameGoesHere';
 	config.password = typeof config.password != 'undefined' ? config.password : 'passwordGoesHere';
@@ -10,7 +11,7 @@ module.exports = function(eventBus, io, name, config) {
 	
 	var interval;
 	var pluginio = io.of('/'+name);
-	var json = JSONAPI(config.port, config.username, config.password, config.salt);
+	var json = JSONAPI(config.host, config.port, config.username, config.password, config.salt);
 	
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
@@ -110,6 +111,9 @@ module.exports = function(eventBus, io, name, config) {
 				pluginio.emit('connection', data);
 			});
 			
+			setTimeout(function() {
+				json.runMethod('getPlayers');	
+			}, 1000);
 			// get full playerlist in an interval
 			interval = setInterval(function() {
 				json.runMethod('getPlayers');
@@ -137,9 +141,7 @@ module.exports = function(eventBus, io, name, config) {
 		if (hasUsers) {
 			console.log('connecting jsonapi due to first user');
 			json.connect(5, 4, onJsonConnected);
-			setTimeout(function() {
-				json.runMethod('getPlayers');	
-			}, 1000);
+			
 		} else {
 			console.log('unload jsonapi due to lack of users');
 			clearInterval(interval);
