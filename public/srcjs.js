@@ -182,10 +182,9 @@ var srcjs = (function() {
 				
 				console = srcjs.ui.Console({
 					title: 'Process I/O',
-					inputListener: function(socket, command) {
-						if (command != '') {
-							socket.emit('input', command);
-							history.push(command);
+					inputListener: function(input) {
+						if (input != '') {
+							socket.emit('input', input);
 							return true;
 						}
 						return false;

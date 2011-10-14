@@ -1,5 +1,6 @@
 var http = require('http');
-var JSONAPI = require('mc_jsonapi');
+//var JSONAPI = require('mc_jsonapi');
+var JSONAPI = require('./jsonapi');
 	
 module.exports = function(eventBus, io, name, config) {
 	config = config || {};
@@ -8,13 +9,16 @@ module.exports = function(eventBus, io, name, config) {
 	config.password = typeof config.password != 'undefined' ? config.password : 'passwordGoesHere';
 	config.salt = typeof config.salt != 'undefined' ? config.salt : 'salt goes here';
 	
-	var interval;
+	var interval, intvalMemory;
 	var pluginio = io.of('/'+name);
 	var json = JSONAPI(config.port, config.username, config.password, config.salt);
+	var memoryTotal = 0;
 	
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
-	eventBus.emit('addscripts', [{plugin: name}, {plugin: name, filename: 'minecraftskin.js'}]);
+	eventBus.emit('addscripts', [{plugin: name},
+		{plugin: name, filename: 'minecraftskin.js'},
+		{plugin: name, filename: 'playerview.js'}]);
 	
 	var skinCache = {};
 	var downloadSkin = function(url, response) {
@@ -80,7 +84,7 @@ module.exports = function(eventBus, io, name, config) {
 	/* the following events are available:
 		procstart (isUnattached)
 		procstop ()
-		connection ()
+		connection (hasUsers)
 	*/
 	
 	// TODO: make jsonDisconnect function, remove pluginio listeners
@@ -91,7 +95,9 @@ module.exports = function(eventBus, io, name, config) {
 			json.on('error', function(message, error) {
 				//console.log('jsonapi error "'+message+'"', error);
 				pluginio.emit('error', message);
-				console.log('json error:', message, error);
+				console.error('json error: '+message);
+				console.error(error.message);
+				console.error(error);
 			});
 			
 			json.on('getPlayers', function(players) {
@@ -110,15 +116,40 @@ module.exports = function(eventBus, io, name, config) {
 				pluginio.emit('connection', data);
 			});
 			
+			json.on('lagmeter', function(data) {
+				pluginio.emit('lagmeter', data);
+			});
+			
+			json.on('system.getJavaMemoryTotal', function(data) {
+				memoryTotal = data;
+				pluginio.emit('loadgraph', {'javaMemoryTotal': data});
+				
+				
+			});
+			
+			json.on('system.getJavaMemoryUsage', function(data) {
+				if (memoryTotal > 0) {
+					pluginio.emit('loadgraph', Math.floor(100 * data / memoryTotal));
+				}
+			});
+			
+			
+			
 			// get full playerlist in an interval
 			interval = setInterval(function() {
 				json.runMethod('getPlayers');
 			}, 10000);
 			
+			intvalMemory = setInterval(function() {
+				json.runMethod('system.getJavaMemoryUsage');
+			}, 5000);
 			
 			json.subscribe('console');
 			json.subscribe('chat');
 			json.subscribe('connections'); // doesn't fucking work
+			json.subscribe('lagmeter');
+			
+			json.runMethod('system.getJavaMemoryTotal');
 		}
 	};
 	
@@ -130,6 +161,7 @@ module.exports = function(eventBus, io, name, config) {
 	});
 	eventBus.on('procstop', function() {
 		clearInterval(interval);
+		clearInterval(intvalMemory);
 		json.unload();
 	});
 	var userCount = 0;
@@ -143,6 +175,8 @@ module.exports = function(eventBus, io, name, config) {
 		} else {
 			console.log('unload jsonapi due to lack of users');
 			clearInterval(interval);
+			clearInterval(intvalMemory);
+			pluginio.removeAllListeners('player.getInventory');
 			json.unload();
 		}
 	});
@@ -163,6 +197,15 @@ module.exports = function(eventBus, io, name, config) {
 				console.log('could not send console command to socket');
 			}
 		});
+		
+		socket.on('getPlayer', function(player, callback) {
+			json.runMethod('getPlayer', [player]);
+			var onJsonPlayer = function(data) {
+				callback(data);
+				json.removeListener('getPlayer', onJsonPlayer);
+			};
+			json.on('getPlayer', onJsonPlayer);
+		});
 	});
 	
 	// must return object with property "unload" being a function with a callback as argument.
@@ -174,6 +217,7 @@ module.exports = function(eventBus, io, name, config) {
 		unload: function(cb) {
 			pluginio.removeAllListeners('connection');
 			clearInterval(interval);
+			clearInterval(intvalMemory);
 			json.unload();
 			cb();
 		},

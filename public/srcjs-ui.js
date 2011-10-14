@@ -100,7 +100,7 @@ srcjs.ui = (function() {
 			spec.setTitleButton = spec.setTitleButton || function(icon, handler, text) {
 				text = text || titleBar.text();
 				titleBar.html('');
-				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'">&lt;</a>').click(handler));
+				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'"></a>').click(handler));
 				if (text) {
 					titleBar.append(text);
 				}
@@ -182,7 +182,12 @@ srcjs.ui = (function() {
 		 */
 		ListBoxFormatted: function(options, spec) {
 			spec = spec || {};
-			spec.listBoxClassNames = ['srcjsListBoxFormatted'];
+			if (spec.listBoxClassNames) {
+				spec.listBoxClassNames.push('srcjsListBoxFormatted');
+			} else {
+				spec.listBoxClassNames = ['srcjsListBoxFormatted'];
+			}
+
 			options.formatColumns = options.formatColumns || function(index, item) {
 				return item;
 			};
@@ -199,6 +204,11 @@ srcjs.ui = (function() {
 		
 		ListBoxLinksFormatted: function(options, spec) {
 			spec = spec || {};
+			if (spec.listBoxClassNames) {
+				spec.listBoxClassNames.push('srcjsListBoxLinksFormatted');
+			} else {
+				spec.listBoxClassNames = ['srcjsListBoxLinksFormatted'];
+			}
 			spec.getListItem = spec.getListItem || function(index) {
 				return $('<li/>').click(function() {
 					list.openItem(index);
