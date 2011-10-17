@@ -21,12 +21,20 @@ if (typeof window.jQuery == 'undefined') {
 			});
 		});
 		
-		socket.on('loadscript', function(path) {
-			//$(document.head).append($('<script src="'+path+'"/>'));
-			var script = document.createElement("script");
-			script.type = "text/javascript";
-			script.src = path+'?_='+Math.random();
-			document.head.appendChild(script);
+		socket.on('loadscript', function(scripts) {
+			var loadScript = function(index) {
+				var path = '/plugins/'+scripts[index].plugin+'/'+scripts[index].filename;
+				var script = document.createElement("script");
+				script.type = "text/javascript";
+				script.onload = function() {
+					if (index < scripts.length - 1) {
+						loadScript(++index);
+					}
+				};
+				script.src = path+'?_='+Math.random();
+				document.head.appendChild(script);
+			};
+			loadScript(0);
 		});
 		
 		socket.on('disconnect', function (status) {
@@ -218,7 +226,9 @@ var srcjs = (function() {
 			tab.click(getTabClickHandler(tabs.length - 1));
 		},
 		
-		
+		escape: function(string) {
+			return string.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		}
 		
 	};
 	return o;

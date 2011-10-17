@@ -20,6 +20,13 @@
 	"plugin": {
 		"srcrcon": {
 			"password": "yourRconPassword"
+		},
+		"mc_jsonapi": {
+			"host": "localhost",
+			"port": 20060,
+			"username": "setUsername",
+			"password": "setPassword",
+			"salt": "your salt"
 		}
 	}
 }

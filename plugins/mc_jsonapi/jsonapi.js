@@ -229,7 +229,11 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 		runMethod: function(method, args) {
 			if (socket !== null) {
 				var data = getLineCall(method, args, username, password, salt);
-				socket.write(data);
+				try {
+					socket.write(data);
+				} catch (e) {
+					return false;
+				}
 				return data;
 			} else {
 				return false;

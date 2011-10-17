@@ -111,7 +111,6 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 		socket.on('login', function(data, cb) {
 			if (data.username != username) {
 				cb(warnings.incorrectLogin);
-				console.log('username "'+data.username+'" doesn\'t even match '+username, data.username != username, data.username, username);
 				
 			} else {
 				login.login(data.username, data.password, function(result) {
@@ -281,11 +280,9 @@ module.exports = function(filename, cb) {
 	});
 	return {
 		start: function(app) {
-			// get username of script (process.getUid only gets id)
-			require('child_process').exec('id -un', function(err, stdout, stderr) {
-				if (err) throw err;
-				
-				srcjsStart(app, stdout.replace(/\n/, ''));
+			login.getUsername(function(username) {
+				console.log('process\' username is "'+username+'"');
+				srcjsStart(app, username);
 			});
 		}
 	};

@@ -48,15 +48,12 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 					});
 					console.log('added route /plugins/'+script.plugin+'/'+script.filename);
 				}
-				
-				// load the client script on users when they join
-				eventBus.on('userjoin', function(socket) {
-					socket.emit('loadscript', '/plugins/'+script.plugin+'/'+script.filename);
-				});
-				
-				
 			})(scripts[i]);
 		}
+		// load the client script on users when they join
+		eventBus.on('userjoin', function(socket) {
+			socket.emit('loadscript', scripts);
+		});
 	});
 	eventBus.on('addroutes', function(routes) {
 		for(var i = 0; i < routes.length; i++) {

@@ -16,9 +16,11 @@ module.exports = function(eventBus, io, name, config) {
 	
 	// add client scripts; plugin must match this plugin's name, filename is optional and defaults to "client.js"
 	// the actual files must be located in plugins/PLUGINNAME/public/
-	eventBus.emit('addscripts', [{plugin: name},
+	eventBus.emit('addscripts', [
+		{plugin: name},
 		{plugin: name, filename: 'minecraftskin.js'},
-		{plugin: name, filename: 'playerview.js'}]);
+		{plugin: name, filename: 'playerview.js'}
+	]);
 	
 	var skinCache = {};
 	var downloadSkin = function(url, response) {
@@ -203,6 +205,15 @@ module.exports = function(eventBus, io, name, config) {
 				console.log('could not send console command to socket');
 			}
 		});
+		
+		socket.on('command', function(data, callback) {
+			console.log('jsonapi command:', data);
+			if (!json.runMethod(data.command, data.args)) {
+				callback('could not run jsonapi command');
+			} else {
+				callback();
+			}
+		})
 		
 		socket.on('getPlayer', function(player, callback) {
 			json.runMethod('getPlayer', [player]);

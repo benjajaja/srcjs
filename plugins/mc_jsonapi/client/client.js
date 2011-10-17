@@ -88,7 +88,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 		splitPanel.append(leftDiv);
 		
 		var rightDiv = $('<div/>');
-		var links = [];
+		var playerNames = [];
 		var playerList = srcjs.ui.ListBoxLinksFormatted({
 			title: 'Players',
 			formatColumns: function(index, item, listIndex) {
@@ -108,12 +108,16 @@ srcjs.plugins.mc_jsonapi = (function() {
 				};
 			},
 			getItemView: function(index) {
-				pluginio.emit('getPlayer', links[index][1], function(data) {
+				pluginio.emit('getPlayer', playerNames[index], function(data) {
 					srcjs.plugins.mc_jsonapi.playerview.setPlayerData(data);
 				});
 				return {
-					element: srcjs.plugins.mc_jsonapi.playerview.panel(links[index][1]),
-					title: links[index][1],
+					element: srcjs.plugins.mc_jsonapi.playerview.panel(playerNames[index], playerNames, function(command, args) {
+						pluginio.emit('command', {command: command, args: args}, function(err) {
+							console.log('ran command '+command+': '+err);
+						});
+					}),
+					title: playerNames[index],
 					onRemove: function(callback) {
 						callback();
 					}
@@ -154,11 +158,6 @@ srcjs.plugins.mc_jsonapi = (function() {
 					pointData.ticks = pointData.ticks.slice(1);
 					pointData.ticks.push((20 - data.tps) * 5);
 					
-					/*pointData[1] = pointData[1].slice(1);
-					pointData[1].push([totalPoints, data.tps]);
-					totalPoints++;*/
-					
-					
 					
 					plot.setData(zip(pointData));
 					plot.draw();
@@ -198,28 +197,30 @@ srcjs.plugins.mc_jsonapi = (function() {
 			panel: panel,
 			
 			setPlayers: function(players) {
-				links = [];
+				var links = [];
+				playerNames = [];
 				//console.log(players[0]);
 				for(var i = 0; i < players.length; i++) {
 					links.push([players[i].op, players[i].name, players[i].worldInfo.name, players[i].health,
 						(players[i].itemInHand ? players[i].itemInHand.type : null)]);
+					playerNames.push(players[i].name);
 				}
 				playerList.set(links);
 			},
 			
 			setPlayerConnection: function(connection) {
 				console.log('connection:', connection);
-				var index = links.indexOf(connection.name);
+				var index = playerNames.indexOf(connection.name);
 
 				if (connection.action == 'connected') {
 					if (index == -1) {
-						links.push(connection.name);
-						playerList.set(links);
+						playerNames.push(connection.name);
+						//playerList.set(playerNames);
 					}
 				} else if (connection.action == 'disconnected') {
 					if (index != -1) {
-						links = links.splice(index, 1);
-						playerList.set(links);
+						playerNames = links.splice(index, 1);
+						//playerList.set(playerNames);
 					}
 				}
 			},
@@ -269,7 +270,6 @@ srcjs.plugins.mc_jsonapi = (function() {
 			onPlugins: function(data) {
 				plugins = [];
 				for(var i = 0; i < data.length; i++) {
-					console.log(data);
 					plugins.push([data[i].enabled, data[i].name, data[i].version, data[i].website]);
 				}
 				pluginList.set(plugins);

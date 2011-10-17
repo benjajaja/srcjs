@@ -65,7 +65,7 @@ srcjs.ui = (function() {
 				window.console.log('SpitPanel: setting width of children: '+childWidth, children.length);
 				
 				
-				children.each(function(i, child) {
+				$(children).each(function(i, child) {
 					if (i < children.length) {
 						$(child).css({
 							width: (childWidth - 1)+'%',
