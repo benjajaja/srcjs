@@ -16,8 +16,10 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 	
 	panel.append(splitTop.panel);
 	
-	var inventory = $('<table class="srcjsInventory"/>');
-	panel.append(inventory);
+	var inventory = srcjs.ui.Table({
+		title: 'Inventory'
+	});
+	panel.append(inventory.panel);
 	
 	return {
 		panel: function(playername, otherPlayers, commandCallback) {
@@ -54,7 +56,7 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 			
 			//$.combobox.instances[0].setSelectOptions(otherPlayers);
 			
-			inventory.html('');
+			inventory.clear();
 			
 			
 			return panel;
@@ -65,17 +67,19 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 			var row;
 			for(var i = 0; i < data.inventory.inventory.length; i++) {
 				if (i % 9 == 0) {
-					row = $('<tr/>');
-					inventory.append(row);
+					if (row) {
+						inventory.addRow(row);
+					}
+					row = [];
 				}
-				var cell = $('<td/>');
+				
 				if (data.inventory.inventory[i] !== null) {
-					cell.append(srcjs.plugins.mc_jsonapi.getItemIcon(data.inventory.inventory[i].type, data.inventory.inventory[i].durability));
+					row.push(srcjs.plugins.mc_jsonapi.getItemIcon(data.inventory.inventory[i].type, data.inventory.inventory[i].durability));
 				} else {
-					cell.html('<img src="clear.gif" width="32" height="32"/>');
+					row.push($('<img src="clear.gif" width="32" height="32"/>'));
 				}
-				row.append(cell);
 			}
+			inventory.addRow(row);
 		}
 	};
 })();

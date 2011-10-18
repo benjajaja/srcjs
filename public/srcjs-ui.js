@@ -61,9 +61,7 @@ srcjs.ui = (function() {
 			
 			var setWidths = function() {
 				var childWidth = Math.floor(100 / panel.children().length);
-				var children = panel.children();
-				window.console.log('SpitPanel: setting width of children: '+childWidth, children.length);
-				
+				var children = panel.children();				
 				
 				$(children).each(function(i, child) {
 					if (i < children.length) {
@@ -83,6 +81,43 @@ srcjs.ui = (function() {
 					panel.append(element);
 					setWidths();
 				},
+			};
+			return o;
+		},
+		
+		Table: function(options) {
+			var panel = $('<div class="srcjsTable"/>');
+			var header = $('<h4>').text(options.title);
+			panel.append(header);
+			var table = $('<table/>');
+			panel.append(table);
+			
+			var o = {
+				panel: panel,
+				addRow: function() {
+					var tr = $('<tr/>');
+					for(var i = 0; i < arguments.length; i++) {
+						if (typeof arguments[i] == 'string' || typeof arguments[i] == 'number') {
+							tr.append($('<td/>').text(arguments[i]));
+						} else if (typeof arguments[i] == 'object') {
+							if (typeof arguments[i].length != 'undefined') {
+								for(var j = 0; j < arguments[i].length; j++) {
+									tr.append($('<td/>').append(arguments[i][j]));
+								}
+							} else {
+								tr.append($('<td/>').append(arguments[i]));
+							}
+						} else if (typeof arguments[i] == 'function') {
+							tr.append($('<td/>').append(arguments[i]()));
+						} else {
+							tr.append($('<td/>').text(arguments[i].toString()));
+						}
+					}
+					table.append(tr);
+				},
+				clear: function() {
+					table.html('');
+				}
 			};
 			return o;
 		},

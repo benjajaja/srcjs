@@ -1401,7 +1401,7 @@ vTextureCoord = aTextureCoord;\n\
 		resumeSceneDrawing();
 	}
 
-	var shitHole = $('<div class="srcjsHole" style="display: none"/>');
+	var shitHole = $('<div class="srcjsHole" style="display: block"/>');
 	$(document.body).append(shitHole);
 	
 	var canvas = $('<canvas id="skin-preview" width="140" height="200">');
@@ -1461,6 +1461,7 @@ vTextureCoord = aTextureCoord;\n\
 				captureCursorLocation(e);
 			}, 10);
 			
+			console.log('loading skin '+playerName);
 			newskin.src = 'plugins/mc_jsonapi/skin/'+playerName;
 			
 			div.append(canvas);

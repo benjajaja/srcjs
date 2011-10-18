@@ -22,56 +22,44 @@ module.exports = function(eventBus, io, name, config) {
 		{plugin: name, filename: 'playerview.js'}
 	]);
 	
-	var skinCache = {};
 	var downloadSkin = function(url, response) {
-		if (skinCache[url]) {
-			response.write(skinCache[url], 'binary');
-			response.end();
-			
-		} else {
-			var options = {
-				host: url.substring(0, url.indexOf('/')),
-				port: 80,
-				path: url.substring(url.indexOf('/')),
-			}
-			var req = http.request(options, function(res) {
-				var cache = '';
-				
-				res.setEncoding('binary')
-				
-				if (res.statusCode == 200) {	
-					res.on('data', function (chunk) {
-						cache += chunk;
-						response.write(chunk, 'binary');
-						
-					});
-				}
-				res.on('end', function () {
-					if (res.statusCode == 200) {
-						response.end();
-						skinCache[url] = cache;
-						// cache clear timeout:
-						setTimeout(function() {
-							delete skinCache[url];
-						}, 10000);
-						
-					} else if (res.statusCode == 302) {
-						var location = res.headers.location;
-						if (location.indexOf('://') != -1) {
-							location = location.substring(location.indexOf('://') + 3);
-						}
-						downloadSkin(location, response);
-					} else {
-						response.end();
-					}
-				});
-			});
-			req.on('error', function(e) {
-				response.end(e.toString());
-			});
-			req.end();
-			
+		var options = {
+			host: url.substring(0, url.indexOf('/')),
+			port: 80,
+			path: url.substring(url.indexOf('/')),
+			timeout: 10
 		}
+		console.log('forward: '+options.host+options.path);
+		var req = http.request(options, function(res) {
+			console.log('request sent');
+			var cache = '';
+			
+			res.setEncoding('binary')
+			
+			res.on('data', function(chunk) {
+				if (res.statusCode == 200) {
+					console.log('piping data...');
+					cache += chunk;
+					response.write(chunk, 'binary');
+						
+					res.on('end', function () {
+						response.end();
+					});
+				} else if (res.statusCode == 302) {
+					console.log('request 302');
+					var location = res.headers.location;
+					if (location.indexOf('://') != -1) {
+						location = location.substring(location.indexOf('://') + 3);
+					}
+					downloadSkin(location, response);
+				} else {
+					console.log('status: '+res.statusCode);
+				}
+			});
+		});
+		req.on('error', function(e) {
+			response.end(e.toString());
+		});
 	};
 	eventBus.emit('addroutes', [{
 		plugin: name,

@@ -164,14 +164,29 @@ srcjs.plugins.mc_jsonapi = (function() {
 				},
 				setServerInfo: function(server) {
 					serverInfo.html('');
-					serverInfo.append($('<h4>').text(server.serverName));
 					
-					var worldList = $('<ul/>');
+					var serverTable = srcjs.ui.Table({
+						title: 'Server'
+					});
+					serverTable.addRow('Name:', server.serverName);
+					serverTable.addRow('Players:', server.players.length+'/'+server.maxPlayers);
+					serverTable.addRow('Port:', server.port);
+					serverTable.addRow('Version:', server.version);
+					
+					serverInfo.append(serverTable.panel);
+					
+					var worldTable = srcjs.ui.Table({
+						title: 'Worlds'
+					});
 					for(var i = 0; i < server.worlds.length; i++) {
-						worldList.append($('<li/>').text(server.worlds[i].name));
+						var time = Math.floor(server.worlds[i].time / 60);
+						
+						worldTable.addRow(server.worlds[i].name, server.worlds[i].environment,
+							padWithZeros(Math.floor(time / 60))+':'+padWithZeros(time % 60),
+							Math.round(server.worlds[i].fullTime / 86400)+' days');
 					}
+					serverInfo.append(worldTable.panel);
 					
-					serverInfo.append(worldList);
 				}
 			};
 			$(document.body).append(graph);
@@ -211,7 +226,6 @@ srcjs.plugins.mc_jsonapi = (function() {
 			setPlayers: function(players) {
 				var links = [];
 				playerNames = [];
-				//console.log(players[0]);
 				for(var i = 0; i < players.length; i++) {
 					links.push([players[i].op, players[i].name, players[i].worldInfo.name, players[i].health,
 						(players[i].itemInHand ? players[i].itemInHand.type : null)]);
