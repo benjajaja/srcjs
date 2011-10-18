@@ -34,7 +34,7 @@ if (typeof window.jQuery == 'undefined') {
 				script.src = path+'?_='+Math.random();
 				document.head.appendChild(script);
 			};
-			loadScript(0);
+			setTimeout(function() { loadScript(0); }, 1000);
 		});
 		
 		socket.on('disconnect', function (status) {

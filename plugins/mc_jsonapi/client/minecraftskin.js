@@ -640,7 +640,7 @@ vTextureCoord = aTextureCoord;\n\
 		else {
 			localStorage = {};
 		}
-		skins = minescraftskinClone(initialSkins);
+		skins = minecraftskinClone(initialSkins);
 		lastSkin = new String(initialLastSkin);
 
 		updateSkins(true);
@@ -1097,11 +1097,15 @@ vTextureCoord = aTextureCoord;\n\
 
 	/* because JS lacks it */
 	/* http://my.opera.com/GreyWyvern/blog/show.dml/1725165 */
-	function minescraftskinClone(object) {
+	function minecraftskinClone(object, depth) {
+		depth = typeof depth != 'undefined' ? depth : 0;
+		if (depth > 10) {
+			return object;
+		}
 		var newObj = (object instanceof Array) ? [] : {};
 		for (i in object) {
 			if (object[i] && typeof object[i] == "object") {
-				newObj[i] = minecraftskinClone(object);
+				newObj[i] = minecraftskinClone(object, ++depth);
 			} else 
 				newObj[i] = object[i]
 		}
@@ -1215,7 +1219,7 @@ vTextureCoord = aTextureCoord;\n\
 
 			} else {
 
-				skins = minescraftskinClone(initialSkins);
+				skins = minecraftskinClone(initialSkins);
 				lastSkin = new String(initialLastSkin);
 				try {
 					localStorage['skins']	= JSON.stringify(skins);
@@ -1236,7 +1240,7 @@ vTextureCoord = aTextureCoord;\n\
 
 			// we need to disable our ‘skins’ stuff, just do session editing
 			localStorage = {};
-			skins = minescraftskinClone(initialSkins);
+			skins = minecraftskinClone(initialSkins);
 			lastSkin = new String(initialLastSkin);
 			localStorage['skins']	= JSON.stringify(skins);
 			localStorage['lastSkin']= JSON.stringify(lastSkin);

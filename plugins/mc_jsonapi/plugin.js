@@ -139,10 +139,15 @@ module.exports = function(eventBus, io, name, config) {
 				pluginio.emit('plugins', plugins);
 			});
 			
+			json.on('getServer', function(server) {
+				pluginio.emit('server', server);
+			});
+			
 			
 			setTimeout(function() {
 				json.runMethod('getPlayers');
 				json.runMethod('getPlugins');
+				json.runMethod('getServer');
 			}, 1000);
 			
 			// get full playerlist in an interval

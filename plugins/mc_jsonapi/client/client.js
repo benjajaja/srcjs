@@ -129,7 +129,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 		});
 		rightDiv.append(playerList.panel());
 		
-		var loadGraph = (function() {
+		var serverInfo = (function() {
 			var pointData = {memory: [], ticks: []}, totalPoints = 50;
 			for(var i = 0; i < totalPoints; i++) {
 				pointData.memory[i] = 0;
@@ -145,9 +145,9 @@ srcjs.plugins.mc_jsonapi = (function() {
 				return zip;
 			};
 
-			var element = $('<div style="width: 400px; height: 200px; margin: 0 auto"/>');
+			var graph = $('<div style="width: 400px; height: 200px; margin: 0 auto"/>');
 			var panel = srcjs.ui.Box({
-				title: 'Load graph',
+				title: 'Server info',
 			});
 			var o = {
 				panel: panel.panel(),
@@ -161,10 +161,21 @@ srcjs.plugins.mc_jsonapi = (function() {
 					
 					plot.setData(zip(pointData));
 					plot.draw();
+				},
+				setServerInfo: function(server) {
+					serverInfo.html('');
+					serverInfo.append($('<h4>').text(server.serverName));
+					
+					var worldList = $('<ul/>');
+					for(var i = 0; i < server.worlds.length; i++) {
+						worldList.append($('<li/>').text(server.worlds[i].name));
+					}
+					
+					serverInfo.append(worldList);
 				}
 			};
-			$(document.body).append(element);
-			var plot = plot = $.plot(element, zip(pointData), {
+			$(document.body).append(graph);
+			var plot = plot = $.plot(graph, zip(pointData), {
 				series: {
 					lines: { show: true }
 				},
@@ -181,11 +192,12 @@ srcjs.plugins.mc_jsonapi = (function() {
 					backgroundColor: { colors: ["#fff", "#eee"] }
 				}
 			});
-			panel.append($('<div class="srcjsPanelBody" style="padding: 10px 0"/>').append(element));
+			var serverInfo = $('<div/>');
+			panel.append($('<div class="srcjsPanelBody" style="padding: 10px 0"/>').append(serverInfo).append(graph));
 
 			return o;
 		})();
-		rightDiv.append(loadGraph.panel);
+		rightDiv.append(serverInfo.panel);
 		
 		splitPanel.append(rightDiv);
 		
@@ -264,7 +276,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 			},
 			
 			onLagmeter: function(data) {
-				loadGraph.addTick(data);
+				serverInfo.addTick(data);
 			},
 			
 			onPlugins: function(data) {
@@ -273,6 +285,10 @@ srcjs.plugins.mc_jsonapi = (function() {
 					plugins.push([data[i].enabled, data[i].name, data[i].version, data[i].website]);
 				}
 				pluginList.set(plugins);
+			},
+			
+			onServer: function(server) {
+				serverInfo.setServerInfo(server);
 			}
 		};
 		return o;
@@ -300,6 +316,8 @@ srcjs.plugins.mc_jsonapi = (function() {
 	pluginio.on('lagmeter', panel.onLagmeter);
 	
 	pluginio.on('plugins', panel.onPlugins);
+	
+	pluginio.on('server', panel.onServer);
 	
 	panel.setChatInputListener(function(input) {
 		pluginio.emit('chat', input);
