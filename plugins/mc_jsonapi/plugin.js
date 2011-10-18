@@ -1,7 +1,7 @@
 var http = require('http');
 var JSONAPI = require('./jsonapi');
 	
-module.exports = function(eventBus, io, name, config) {
+module.exports = function(eventBus, io, config, name) {
 	config = config || {};
 	config.hostname = typeof config.hostname != 'undefined' ? config.hostname : 20060;
 	config.port = typeof config.port != 'undefined' ? config.port : 20060;
@@ -20,7 +20,7 @@ module.exports = function(eventBus, io, name, config) {
 		{plugin: name},
 		{plugin: name, filename: 'minecraftskin.js'},
 		{plugin: name, filename: 'playerview.js'}
-	]);
+	], name);
 	
 	var downloadSkin = function(url, response) {
 		var options = {
@@ -68,7 +68,7 @@ module.exports = function(eventBus, io, name, config) {
 			res.header('Content-Type', 'image/png');
 			downloadSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res);
 		}
-	}]);
+	}], name);
 	
 	
 	/* the following events are available:
@@ -134,13 +134,14 @@ module.exports = function(eventBus, io, name, config) {
 			
 			setTimeout(function() {
 				json.runMethod('getPlayers');
-				json.runMethod('getPlugins');
-				json.runMethod('getServer');
+				
 			}, 1000);
 			
 			// get full playerlist in an interval
 			interval = setInterval(function() {
 				json.runMethod('getPlayers');
+				json.runMethod('getPlugins');
+				json.runMethod('getServer');
 			}, 10000);
 			
 			intvalMemory = setInterval(function() {
@@ -168,7 +169,7 @@ module.exports = function(eventBus, io, name, config) {
 		json.unload();
 	});
 	var userCount = 0;
-	eventBus.on('connection', function(hasUsers) {
+	eventBus.on('users', function(hasUsers) {
 		if (hasUsers) {
 			console.log('connecting jsonapi due to first user');
 			json.connect(5, 4, onJsonConnected);
@@ -181,11 +182,11 @@ module.exports = function(eventBus, io, name, config) {
 			json.unload();
 		}
 	});
-
-	eventBus.on('procstop', function() {
-		pluginio.emit('data', name+': game is stopped');
-	});
 	
+	eventBus.on('userjoin', function() {
+		json.runMethod('getPlugins');
+		json.runMethod('getServer');
+	});
 	
 	pluginio.on('connection', function(socket) {
 		socket.on('chat', function(data) {

@@ -10,10 +10,10 @@ var loadPlugin = function(eventBus, io, name, pluginConfig, cb) {
 			try {
 				// load module and clear cache inmediately to be able to reload on HUP
 				var module = require.resolve('../plugins/'+name+'/plugin');
-				plugins.push(require(module)(eventBus, io, name, pluginConfig));
+				plugins.push(require(module)(eventBus, io, pluginConfig, name));
 				delete require.cache[module];
 				
-				console.log('Plugin "'+name+'" loaded');
+				console.log('plugin "'+name+'" loaded');
 				cb();
 			} catch (e) {
 				cb(e);
@@ -25,7 +25,7 @@ var loadPlugin = function(eventBus, io, name, pluginConfig, cb) {
 
 module.exports.load = function(list, eventBus, app, io, config, cb) {
 	// let plugins load additional client side code
-	eventBus.on('addscripts', function(scripts) {
+	eventBus.on('addscripts', function(scripts, pluginName) {
 		for(var i = 0; i < scripts.length; i++) {
 			(function(script) {
 				if (!script.filename) {
@@ -46,7 +46,7 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 						});
 						
 					});
-					console.log('added route /plugins/'+script.plugin+'/'+script.filename);
+					console.log('plugin "'+pluginName+'" added route /plugins/'+script.plugin+'/'+script.filename);
 				}
 			})(scripts[i]);
 		}
@@ -55,13 +55,13 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 			socket.emit('loadscript', scripts);
 		});
 	});
-	eventBus.on('addroutes', function(routes) {
+	eventBus.on('addroutes', function(routes, pluginName) {
 		for(var i = 0; i < routes.length; i++) {
 			(function(route) {
 				if (app.lookup.get('/plugins/'+route.plugin+'/'+route.path).length == 0) {
 					app.get('/plugins/'+route.plugin+'/'+route.path, route.callback);
 				}
-				console.log('added route /plugins/'+route.plugin+'/'+route.path);
+				console.log('plugin "'+pluginName+'" added route /plugins/'+route.plugin+'/'+route.path);
 			})(routes[i]);
 		}
 	});

@@ -52,14 +52,14 @@ var loadPlugins = function(proc, pluginEventBus, app, io, socket, cb) {
 		getStatus(proc, options.pidFilename, function(status, isUnattached) {
 			// this is a bit fuzzy. "socket" and "cb" are optional, called when reloading plugins.
 			if (socket) {
-				pluginEventBus.emit('connection', true);
+				pluginEventBus.emit('users', true);
 			}
 			if (status == Status.STARTED) {
 				pluginEventBus.emit('procstart', isUnattached);
 			} else {
 				pluginEventBus.emit('procstop');
 			}
-			console.log('plugins loaded');
+			console.log('all plugins loaded');
 			if (cb) {
 				cb();
 			}
@@ -119,7 +119,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 					} else {
 						pluginEventBus.emit('userjoin', socket);
 						if (userCount == 0) {
-							pluginEventBus.emit('connection', true);
+							pluginEventBus.emit('users', true);
 						}
 						userCount++;
 						
@@ -172,7 +172,7 @@ PLEASE STOP AND RESTART SERVER TO REGAIN INPUT AND OUTPUT CONTROL.\n\
 							userCount--;
 							if (userCount <= 0) {
 								userCount = 0;
-								pluginEventBus.emit('connection', false);
+								pluginEventBus.emit('users', false);
 							}
 						});
 					}
