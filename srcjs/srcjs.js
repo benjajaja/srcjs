@@ -273,17 +273,13 @@ var readOptions = function(filename, cb) {
 	});
 };
 
-module.exports = function(filename, cb) {
+module.exports = function(filename, app, cb) {
 	configFilename = filename;
 	readOptions(configFilename, function() {
 		cb(options.port);
+		login.getUsername(function(username) {
+			console.log('process\' username is "'+username+'"');
+			srcjsStart(app, username);
+		});
 	});
-	return {
-		start: function(app) {
-			login.getUsername(function(username) {
-				console.log('process\' username is "'+username+'"');
-				srcjsStart(app, username);
-			});
-		}
-	};
 };

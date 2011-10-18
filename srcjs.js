@@ -19,13 +19,9 @@ app.post('/ignoreme', function (req, res) {
 });
 
 
-var srcjs = require('./srcjs/srcjs')('config.json', function(port) {
-	
+var srcjs = require('./srcjs/srcjs')('config.json', app, function(port) {
 	app.listen(port);
 	console.log('express started on port '+port);
-	
-	srcjs.start(app);
-	
 });
 
 

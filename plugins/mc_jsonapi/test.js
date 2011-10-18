@@ -1,0 +1,1 @@
+var plugin = require('./plugin');var eventBus = require('../../srcjs/eventbus')();var io = {	of: function(name) {		var io = require('../../srcjs/eventbus')();				return io;	}};exports.test = function(test) {		plugin = plugin(eventBus, io, "pluginname", {	});	test.done();};
