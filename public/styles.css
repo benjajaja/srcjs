@@ -282,7 +282,7 @@ html, body {
 	}
 		.srcjsConsoleLines div {
 			white-space: pre;
-			color: #81F7F3;
+			color: white;
 		}
 			.srcjsConsoleLines div.error {
 				color: #faa;
@@ -305,6 +305,30 @@ html, body {
 			border-radius: 10px;
 			background: rgba(255,255,255,0.75);
 			margin: 0 1px;
+		}
+		.srcjsConsoleLines .color-31 {
+			color: #ff5555;
+		}
+		.srcjsConsoleLines .color-32 {
+			color: #55ff55;
+		}
+		.srcjsConsoleLines .color-33 {
+			color: #fff;
+		}
+		.srcjsConsoleLines .color-34 {
+			color: #fff;
+		}		
+		.srcjsConsoleLines .color-35 {
+			color: #aa00aa;
+		}
+		.srcjsConsoleLines .color-36 {
+			color: #55ffff;
+		}
+		.srcjsConsoleLines .color-37 {
+			color: #fff;
+		}
+		.srcjsConsoleLines .color-38 {
+			color: #fff;
 		}
 	.srcjsInput {
 	}
@@ -506,7 +530,7 @@ background: linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
 				box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.25);
 			}
 	.srcjsTabPanels {
-		width: 960px;
+		width: 1200px;
 		margin: 0 auto;
 		padding: 0 20px;
 	}

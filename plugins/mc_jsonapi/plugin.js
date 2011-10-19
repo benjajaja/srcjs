@@ -108,6 +108,8 @@ module.exports = function(eventBus, io, config, name) {
 			json.subscribe('lagmeter');
 			
 			json.runMethod('system.getJavaMemoryTotal');
+		} else {
+			pluginio.emit('error', 'cannot connect to jsonapi');
 		}
 	};
 	

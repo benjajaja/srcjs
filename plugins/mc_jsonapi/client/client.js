@@ -32,6 +32,10 @@ srcjs.plugins.mc_jsonapi = (function() {
 		});
 		leftDiv.append(chatConsole.panel());
 		
+		var minecraftConsoleFormatter = function(line) {
+			return $('<span>'+line.replace(/\[([0-9]{1,2})m/g, '</span><span class="color-$1">')+'</span>');
+		};
+		
 		var consoleConsole = srcjs.ui.Console({
 			title: 'Console',
 			inputListener: function(input) {
@@ -39,6 +43,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 					consoleInputListener(input);
 				}
 			},
+			formatter: minecraftConsoleFormatter,
 			height: 300,
 			css: {
 				marginBottom: '5px'

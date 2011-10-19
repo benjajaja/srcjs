@@ -311,18 +311,24 @@ srcjs.ui = (function() {
 			 */
 			box.addLines = function(data) {
 				var div = $('<div/>');
-				if (typeof data == 'string') {
-					div.text(data);
-				} else if (typeof data == 'object') {
+				
+				if (typeof data == 'object') {
 					if (typeof data.length != 'undefined') {
 						$(data).each(function(index, element) {
-							div.append(element);
+							if (options.formatter) {
+								element = options.formatter(element);
+							}
+							if (typeof element == 'string') {
+								div.text(element);
+							} else {
+								div.append(element);
+							}
 						});
 					} else {
-						div.append(data[i]);
+						throw "incorrect addLines argument";
 					}
 				} else {
-					div.text(data.toString());
+					throw "incorrect addLines argument";
 				}
 				// limit scroll history
 				if (lineDiv.children().size() > 1000) {
