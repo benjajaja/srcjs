@@ -235,20 +235,18 @@ srcjs.plugins.mc_jsonapi = (function() {
 			},
 			
 			setPlayerConnection: function(connection) {
-				console.log('connection:', connection);
-				var index = playerNames.indexOf(connection.name);
-
+				var index = playerNames.indexOf(connection.player);
+				
 				if (connection.action == 'connected') {
 					if (index == -1) {
-						playerNames.push(connection.name);
-						//playerList.set(playerNames);
+						playerNames.push(connection.player);
 					}
 				} else if (connection.action == 'disconnected') {
 					if (index != -1) {
-						playerNames = links.splice(index, 1);
-						//playerList.set(playerNames);
+						playerNames.splice(index, 1);
 					}
 				}
+				playerList.set(playerNames);
 			},
 			
 			setChatInputListener: function(listener) {
@@ -320,7 +318,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 		panel.setPlayers(players);
 	});
 	
-	pluginio.on('connection', function(connection) {
+	pluginio.on('connections', function(connection) {
 		panel.setPlayerConnection(connection);
 	});
 	

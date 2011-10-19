@@ -233,10 +233,16 @@ srcjs.ui = (function() {
 				return item;
 			};
 			spec.getItem = spec.getItem || function(item, index) {
-				var data = [];
-				for(var i = 0; i < item.length; i++) {
-					data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i], index));
-					
+				var data;
+				if (typeof item == 'object' && item.length) {
+					data = [];
+					for(var i = 0; i < item.length; i++) {
+						data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i], index));
+						
+					}
+				} else {
+					data = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item, index));
+					//data = [item];
 				}
 				return data;
 			};

@@ -1,5 +1,5 @@
-var http = require('http');
 var JSONAPI = require('./jsonapi');
+var downloadMinecraftSkin = require('./minecraftskin');
 	
 module.exports = function(eventBus, io, config, name) {
 	config = config || {};
@@ -22,51 +22,13 @@ module.exports = function(eventBus, io, config, name) {
 		{plugin: name, filename: 'playerview.js'}
 	], name);
 	
-	var downloadSkin = function(url, response) {
-		var options = {
-			host: url.substring(0, url.indexOf('/')),
-			port: 80,
-			path: url.substring(url.indexOf('/')),
-			timeout: 10
-		}
-		console.log('forward: '+options.host+options.path);
-		var req = http.request(options, function(res) {
-			console.log('request sent');
-			var cache = '';
-			
-			res.setEncoding('binary')
-			
-			res.on('data', function(chunk) {
-				if (res.statusCode == 200) {
-					console.log('piping data...');
-					cache += chunk;
-					response.write(chunk, 'binary');
-						
-					res.on('end', function () {
-						response.end();
-					});
-				} else if (res.statusCode == 302) {
-					console.log('request 302');
-					var location = res.headers.location;
-					if (location.indexOf('://') != -1) {
-						location = location.substring(location.indexOf('://') + 3);
-					}
-					downloadSkin(location, response);
-				} else {
-					console.log('status: '+res.statusCode);
-				}
-			});
-		});
-		req.on('error', function(e) {
-			response.end(e.toString());
-		});
-	};
+	
 	eventBus.emit('addroutes', [{
 		plugin: name,
 		path: 'skin/:skin',
 		callback: function(req, res) {
 			res.header('Content-Type', 'image/png');
-			downloadSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res);
+			downloadMinecraftSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res, console.log);
 		}
 	}], name);
 	
@@ -102,8 +64,8 @@ module.exports = function(eventBus, io, config, name) {
 				pluginio.emit('chat', data);
 			});
 			
-			json.on('connection', function(data) {
-				pluginio.emit('connection', data);
+			json.on('connections', function(data) {
+				pluginio.emit('connections', data);
 			});
 			
 			json.on('lagmeter', function(data) {
@@ -131,22 +93,14 @@ module.exports = function(eventBus, io, config, name) {
 				pluginio.emit('server', server);
 			});
 			
-			
-			setTimeout(function() {
-				json.runMethod('getPlayers');
-				
-			}, 1000);
-			
 			// get full playerlist in an interval
-			interval = setInterval(function() {
-				json.runMethod('getPlayers');
+			var pollInfo = function() {
 				json.runMethod('getPlugins');
 				json.runMethod('getServer');
-			}, 10000);
-			
-			intvalMemory = setInterval(function() {
 				json.runMethod('system.getJavaMemoryUsage');
-			}, 5000);
+			};
+			pollInfo();
+			interval = setInterval(pollInfo, 10000);
 			
 			json.subscribe('console');
 			json.subscribe('chat');

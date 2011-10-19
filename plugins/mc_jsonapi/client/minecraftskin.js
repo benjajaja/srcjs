@@ -1044,8 +1044,10 @@ vTextureCoord = aTextureCoord;\n\
 	}
 
 	/* our data: URL image loader function */
-	function loadNewSkin() {
-
+	function loadNewSkin(img) {
+		if (!img) {
+			img = this;
+		}
 		if (!fCanvasSupport) {
 			console.log('no fCanvasSupport');
 			return;
@@ -1053,7 +1055,7 @@ vTextureCoord = aTextureCoord;\n\
 
 		skineditormc.save();
 		skineditormc.clearRect(0,0,64,32);
-		skineditormc.drawImage( this, 0, 0, 64, 32 );
+		skineditormc.drawImage( img, 0, 0, 64, 32 );
 		skineditormc.restore();
 
 		skineditorc.clearRect(0,0,512,256);
@@ -1061,7 +1063,7 @@ vTextureCoord = aTextureCoord;\n\
 		if ( skineditorc.mozImageSmoothingEnabled ) {
 			// if we are mozilla, tell them to stop SMOOTHING OUR SHIT
 			skineditorc.mozImageSmoothingEnabled ? skineditorc.mozImageSmoothingEnabled = false : true;
-			skineditorc.drawImage( this, 0, 0, 512, 256 );
+			skineditorc.drawImage( img, 0, 0, 512, 256 );
 		} else {
 			// we *arent* Gecko. assume, for now, that thats everything that can do what we need
 			// XXX we need to toggle on Opera/Chrome to do a more expensive 
@@ -1401,7 +1403,7 @@ vTextureCoord = aTextureCoord;\n\
 		resumeSceneDrawing();
 	}
 
-	var shitHole = $('<div class="srcjsHole" style="display: block"/>');
+	var shitHole = $('<div class="srcjsHole" style="display: none"/>');
 	$(document.body).append(shitHole);
 	
 	var canvas = $('<canvas id="skin-preview" width="140" height="200">');
@@ -1441,8 +1443,9 @@ vTextureCoord = aTextureCoord;\n\
 			
 			
 			$(newskin).bind('load', function() {
-				console.log('skin loaded');
-				$.proxy(loadNewSkin, newskin);
+				console.log('skin loaded', newskin);
+				loadNewSkin(newskin);
+				//$.proxy(loadNewSkin, newskin);
 			});
 			shitHole.append(newskin);
 			var e = {
