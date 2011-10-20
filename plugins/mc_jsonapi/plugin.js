@@ -1,7 +1,7 @@
-var http = require('http');
 var JSONAPI = require('./jsonapi');
+var downloadMinecraftSkin = require('./minecraftskin');
 	
-module.exports = function(eventBus, io, name, config) {
+module.exports = function(eventBus, io, config, name) {
 	config = config || {};
 	config.hostname = typeof config.hostname != 'undefined' ? config.hostname : 20060;
 	config.port = typeof config.port != 'undefined' ? config.port : 20060;
@@ -20,55 +20,17 @@ module.exports = function(eventBus, io, name, config) {
 		{plugin: name},
 		{plugin: name, filename: 'minecraftskin.js'},
 		{plugin: name, filename: 'playerview.js'}
-	]);
+	], name);
 	
-	var downloadSkin = function(url, response) {
-		var options = {
-			host: url.substring(0, url.indexOf('/')),
-			port: 80,
-			path: url.substring(url.indexOf('/')),
-			timeout: 10
-		}
-		console.log('forward: '+options.host+options.path);
-		var req = http.request(options, function(res) {
-			console.log('request sent');
-			var cache = '';
-			
-			res.setEncoding('binary')
-			
-			res.on('data', function(chunk) {
-				if (res.statusCode == 200) {
-					console.log('piping data...');
-					cache += chunk;
-					response.write(chunk, 'binary');
-						
-					res.on('end', function () {
-						response.end();
-					});
-				} else if (res.statusCode == 302) {
-					console.log('request 302');
-					var location = res.headers.location;
-					if (location.indexOf('://') != -1) {
-						location = location.substring(location.indexOf('://') + 3);
-					}
-					downloadSkin(location, response);
-				} else {
-					console.log('status: '+res.statusCode);
-				}
-			});
-		});
-		req.on('error', function(e) {
-			response.end(e.toString());
-		});
-	};
+	
 	eventBus.emit('addroutes', [{
 		plugin: name,
 		path: 'skin/:skin',
 		callback: function(req, res) {
 			res.header('Content-Type', 'image/png');
-			downloadSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res);
+			downloadMinecraftSkin('www.minecraft.net/skin/'+req.params.skin+'.png', res, console.log);
 		}
-	}]);
+	}], name);
 	
 	
 	/* the following events are available:
@@ -102,8 +64,8 @@ module.exports = function(eventBus, io, name, config) {
 				pluginio.emit('chat', data);
 			});
 			
-			json.on('connection', function(data) {
-				pluginio.emit('connection', data);
+			json.on('connections', function(data) {
+				pluginio.emit('connections', data);
 			});
 			
 			json.on('lagmeter', function(data) {
@@ -131,21 +93,14 @@ module.exports = function(eventBus, io, name, config) {
 				pluginio.emit('server', server);
 			});
 			
-			
-			setTimeout(function() {
-				json.runMethod('getPlayers');
+			// get full playerlist in an interval
+			var pollInfo = function() {
 				json.runMethod('getPlugins');
 				json.runMethod('getServer');
-			}, 1000);
-			
-			// get full playerlist in an interval
-			interval = setInterval(function() {
-				json.runMethod('getPlayers');
-			}, 10000);
-			
-			intvalMemory = setInterval(function() {
 				json.runMethod('system.getJavaMemoryUsage');
-			}, 5000);
+			};
+			pollInfo();
+			interval = setInterval(pollInfo, 10000);
 			
 			json.subscribe('console');
 			json.subscribe('chat');
@@ -153,6 +108,8 @@ module.exports = function(eventBus, io, name, config) {
 			json.subscribe('lagmeter');
 			
 			json.runMethod('system.getJavaMemoryTotal');
+		} else {
+			pluginio.emit('error', 'cannot connect to jsonapi');
 		}
 	};
 	
@@ -168,7 +125,7 @@ module.exports = function(eventBus, io, name, config) {
 		json.unload();
 	});
 	var userCount = 0;
-	eventBus.on('connection', function(hasUsers) {
+	eventBus.on('users', function(hasUsers) {
 		if (hasUsers) {
 			console.log('connecting jsonapi due to first user');
 			json.connect(5, 4, onJsonConnected);
@@ -181,11 +138,11 @@ module.exports = function(eventBus, io, name, config) {
 			json.unload();
 		}
 	});
-
-	eventBus.on('procstop', function() {
-		pluginio.emit('data', name+': game is stopped');
-	});
 	
+	eventBus.on('userjoin', function() {
+		json.runMethod('getPlugins');
+		json.runMethod('getServer');
+	});
 	
 	pluginio.on('connection', function(socket) {
 		socket.on('chat', function(data) {

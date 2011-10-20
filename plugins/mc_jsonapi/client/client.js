@@ -32,6 +32,10 @@ srcjs.plugins.mc_jsonapi = (function() {
 		});
 		leftDiv.append(chatConsole.panel());
 		
+		var minecraftConsoleFormatter = function(line) {
+			return $('<span>'+line.replace(/\[([0-9]{1,2})m/g, '</span><span class="color-$1">')+'</span>');
+		};
+		
 		var consoleConsole = srcjs.ui.Console({
 			title: 'Console',
 			inputListener: function(input) {
@@ -39,6 +43,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 					consoleInputListener(input);
 				}
 			},
+			formatter: minecraftConsoleFormatter,
 			height: 300,
 			css: {
 				marginBottom: '5px'
@@ -235,20 +240,18 @@ srcjs.plugins.mc_jsonapi = (function() {
 			},
 			
 			setPlayerConnection: function(connection) {
-				console.log('connection:', connection);
-				var index = playerNames.indexOf(connection.name);
-
+				var index = playerNames.indexOf(connection.player);
+				
 				if (connection.action == 'connected') {
 					if (index == -1) {
-						playerNames.push(connection.name);
-						//playerList.set(playerNames);
+						playerNames.push(connection.player);
 					}
 				} else if (connection.action == 'disconnected') {
 					if (index != -1) {
-						playerNames = links.splice(index, 1);
-						//playerList.set(playerNames);
+						playerNames.splice(index, 1);
 					}
 				}
+				playerList.set(playerNames);
 			},
 			
 			setChatInputListener: function(listener) {
@@ -320,7 +323,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 		panel.setPlayers(players);
 	});
 	
-	pluginio.on('connection', function(connection) {
+	pluginio.on('connections', function(connection) {
 		panel.setPlayerConnection(connection);
 	});
 	

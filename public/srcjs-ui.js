@@ -250,10 +250,16 @@ srcjs.ui = (function() {
 				return item;
 			};
 			spec.getItem = spec.getItem || function(item, index) {
-				var data = [];
-				for(var i = 0; i < item.length; i++) {
-					data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i], index));
-					
+				var data;
+				if (typeof item == 'object' && item.length) {
+					data = [];
+					for(var i = 0; i < item.length; i++) {
+						data[i] = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item[i], index));
+						
+					}
+				} else {
+					data = $('<span class="srcjsListBoxItem"/>').append(options.formatColumns(i, item, index));
+					//data = [item];
 				}
 				return data;
 			};
@@ -322,18 +328,24 @@ srcjs.ui = (function() {
 			 */
 			box.addLines = function(data) {
 				var div = $('<div/>');
-				if (typeof data == 'string') {
-					div.text(data);
-				} else if (typeof data == 'object') {
+				
+				if (typeof data == 'object') {
 					if (typeof data.length != 'undefined') {
 						$(data).each(function(index, element) {
-							div.append(element);
+							if (options.formatter) {
+								element = options.formatter(element);
+							}
+							if (typeof element == 'string') {
+								div.text(element);
+							} else {
+								div.append(element);
+							}
 						});
 					} else {
-						div.append(data[i]);
+						throw "incorrect addLines argument";
 					}
 				} else {
-					div.text(data.toString());
+					throw "incorrect addLines argument";
 				}
 				// limit scroll history
 				if (lineDiv.children().size() > 1000) {
