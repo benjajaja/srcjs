@@ -229,7 +229,15 @@ srcjs.plugins.mc_jsonapi = (function() {
 		
 		
 		var o = {
-			panel: panel,
+			panel: function() {
+				return panel;
+			},
+			show: function() {
+				panel.show();
+			},
+			hide: function() {
+				panel.hide();
+			},
 			
 			setPlayers: function(players) {
 				var links = [];
@@ -355,7 +363,7 @@ srcjs.plugins.mc_jsonapi = (function() {
 	});
 	
 	// let's add a tab
-	srcjs.addTab('JSONAPI', panel.panel);
+	srcjs.addTab('JSONAPI', panel);
 	
 	// MUST return object with property onStatus: function(status) and onUnload: function()
 	return {

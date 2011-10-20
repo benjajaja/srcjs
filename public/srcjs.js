@@ -200,7 +200,17 @@ var srcjs = (function() {
 					height: 400
 				});
 				consolePanel.append(console.panel());
-				o.addTab('Process I/O', consolePanel, true);
+				o.addTab('Process I/O', {
+					panel: function() {
+						return consolePanel;
+					},
+					show: function() {
+						consolePanel.show();
+					},
+					hide: function() {
+						consolePanel.hide();
+					}
+				}, true);
 				tabs[0].tab.click();
 			})();
 			
@@ -217,7 +227,7 @@ var srcjs = (function() {
 			$('.srcjsTabs').append(tab);
 			
 			panel.hide();
-			$('.srcjsTabPanels').append(panel);
+			$('.srcjsTabPanels').append(panel.panel);
 			
 			tabs.push({
 				tab: tab,
