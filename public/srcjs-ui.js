@@ -11,46 +11,63 @@
 srcjs.ui = (function() {
 
 	// private to all members of package
-	var TextboxHistory = function() {
+	var TextboxHistory = function(input, listener) {
+		
 		// notice importance of pre- and post-increment on "index" (it's for brevity)
 		var history = [];
 		var index = 0;
-		var size = 0;
+
 		var o = {
 			push: function(command) {
-				history[index++] = command;
+				index = history.length;
+				history[index] = command;
 				history.splice(index + 1);
-				size++;
 			},
 			back: function(input) {
 				if (index > 0) {
-					input.val(history[--index]);
+					return history[--index];
 				}
+				return null;
 			},
 			forth: function(input) {
 				if (typeof history[index + 1] != 'undefined') {
-					input.val(history[++index]);
+					return history[++index];
 				} else {
-					if (index < size) {
+					if (index < history.length) {
 						index++;
 					}
-					input.val('');
+					return null;
 				}
 			},
 			listen: function(input, listener) {
 				input.keyup(function(e) {
+					var newVal = null;
 					if (e.which == 13) { // enter
-						if (listener(input.val())) {
+						if (listener(input.val()) !== false) {
+							o.push(input.val());
+							input.val('');
+							console.log(history);
+						}
+					} else if (e.which == 38) { // arrow up
+						newVal = o.back();
+						if (newVal !== null) {
+							input.val(newVal);
+						}
+					} else if (e.which == 40) { // arrow down
+						newVal = o.forth();
+						if (newVal !== null) {
+							input.val(newVal);
+						} else {
 							input.val('');
 						}
-					} else if (e.which == 38) {
-						o.back(input);
-					} else if (e.which == 40) {
-						o.forth(input);
 					}
+					
 				});
 			}
 		};
+		if (input && listener) {
+			o.listen(input, listener);
+		}
 		return o;
 	};
 	
@@ -346,21 +363,8 @@ srcjs.ui = (function() {
 				wrapper.append(input);
 				inputDiv.append(wrapper);
 				
-				input.keyup(function(e) {
-					if (e.which == 13) { // enter
-						if (options.inputListener(input.val()) !== false) {
-							input.val('');
-						}
-					} else if (e.which == 38) { // up
-						history.back(input);
-					} else if (e.which == 40) { // down
-						history.forth(input);
-					}
-				});
-				
 				box.append(inputDiv);
-				var history = TextboxHistory();
-				history.listen(lineDiv, options.inputListener);
+				var history = TextboxHistory(input, options.inputListener);
 				
 				
 				height -= 30; // take off input height
