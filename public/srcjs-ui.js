@@ -219,8 +219,8 @@ srcjs.ui = (function() {
 				});
 			}
 			
-			var body = $('<div class="srcjsPanelBody"/>');
-			box.append(body.append(spec.list));
+			spec.body = $('<div class="srcjsPanelBody"/>');
+			box.append(spec.body.append(spec.list));
 			
 			// set items to list of strings
 			box.set = function(items) {
@@ -235,7 +235,7 @@ srcjs.ui = (function() {
 			};
 			
 			box.getBody = function() {
-				return body;
+				return spec.body;
 			};
 			
 			return box;
@@ -291,23 +291,21 @@ srcjs.ui = (function() {
 			
 			list.openItem = function(index) {
 				spec.list.detach();
-				var onRemoveCallback = function() {
-				};
-				var body = $('<div class="srcjsPanelBody"/>');
+				//var body = $('<div class="srcjsPanelBody"/>');
 				
 				var view = options.getItemView(index);
 				
-				list.append(body.append(view.element));
+				spec.body.append(view.element);
 				spec.setTitleButton('back', function() {
 					spec.setTitle(options.title);
 					if (view.onRemove) {
 						view.onRemove(function() {
-							body.remove();
-							list.append(spec.list);
+							view.element.remove();
+							spec.body.append(spec.list);
 						});
 					} else {
-						body.remove();
-						list.append(spec.list);
+						view.element.remove();
+						spec.body.append(spec.list);
 					}
 				}, view.title);
 			};
@@ -335,6 +333,11 @@ srcjs.ui = (function() {
 			 * Add a line of text, an element, or an array of elements
 			 */
 			box.addLines = function(data) {
+				var atBottom = false;
+				if (lineDiv[0].scrollHeight - lineDiv.scrollTop() == lineDiv.height()) {
+					atBottom = true;
+				}
+				
 				var div = $('<div/>');
 				
 				if (typeof data == 'object') {
@@ -355,14 +358,24 @@ srcjs.ui = (function() {
 				} else {
 					throw "incorrect addLines argument";
 				}
+				
 				// limit scroll history
 				if (lineDiv.children().size() > 1000) {
 					lineDiv.children().filter(':lt(100)').remove();
 				}
 				lineDiv.append(div);
+				
+				if (atBottom) {
+					box.scrollToBottom();
+				}
+				
+			};
+			
+			box.scrollToBottom = function() {
 				lineDiv.scrollTop(lineDiv[0].scrollHeight);
 			};
 			
+			var scrollTimeout = null;
 			
 			height = typeof options.height != 'undefined' ? options.height : 100;
 			height -= 30 + 10; // take off top and bottom bar - yes, this bad practice

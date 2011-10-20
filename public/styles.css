@@ -362,8 +362,7 @@ html, body {
 			color: #55ff55;
 		}
 		.srcjsConsoleLines .color-esc-33 {
-			background: white;
-			color: black;
+			color: #FFFF55;
 		}
 		.srcjsConsoleLines .color-esc-34 {
 			background: white;
