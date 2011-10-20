@@ -21,7 +21,7 @@ srcjs.ui = (function() {
 			push: function(command) {
 				index = history.length;
 				history[index] = command;
-				history.splice(index + 1);
+				history.splice(++index);
 			},
 			back: function(input) {
 				if (index > 0) {
@@ -40,17 +40,21 @@ srcjs.ui = (function() {
 				}
 			},
 			listen: function(input, listener) {
+				var tmp = null;
 				input.keyup(function(e) {
 					var newVal = null;
 					if (e.which == 13) { // enter
 						if (listener(input.val()) !== false) {
 							o.push(input.val());
 							input.val('');
-							console.log(history);
+							tmp = null;
 						}
 					} else if (e.which == 38) { // arrow up
 						newVal = o.back();
 						if (newVal !== null) {
+							if (index == history.length - 1) {
+								tmp = input.val();
+							}
 							input.val(newVal);
 						}
 					} else if (e.which == 40) { // arrow down
@@ -58,7 +62,11 @@ srcjs.ui = (function() {
 						if (newVal !== null) {
 							input.val(newVal);
 						} else {
-							input.val('');
+							if (tmp !== null) {
+								input.val(tmp);
+							} else {
+								input.val('');
+							}
 						}
 					}
 					
@@ -368,6 +376,11 @@ srcjs.ui = (function() {
 				
 				var btn = $('<button class="srcjsInputButton"/>');
 				btn.append('<img src="clear.gif" class="srcjsIcon srcjsIconInput"/>');
+				btn.click(function() {
+					var e = $.Event('keyup');
+					e.which = 13; // enter key
+					input.trigger(e);
+				});
 				inputDiv.append(btn);
 				
 				var wrapper = $('<div class="srcjsInputWrapper"/>');

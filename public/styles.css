@@ -306,29 +306,113 @@ html, body {
 			background: rgba(255,255,255,0.75);
 			margin: 0 1px;
 		}
-		.srcjsConsoleLines .color-31 {
-			color: #ff5555;
+		.srcjsConsoleLines .color-0 {
+			color: #000000;
 		}
-		.srcjsConsoleLines .color-32 {
-			color: #55ff55;
+		.srcjsConsoleLines .color-1 {
+			color: #0000aa;
 		}
-		.srcjsConsoleLines .color-33 {
-			color: #fff;
+		.srcjsConsoleLines .color-2 {
+			color: #00aa00;
 		}
-		.srcjsConsoleLines .color-34 {
-			color: #fff;
-		}		
-		.srcjsConsoleLines .color-35 {
+		.srcjsConsoleLines .color-3 {
+			color: #00aaaa;
+		}
+		.srcjsConsoleLines .color-4 {
+			color: #aa0000;
+		}
+		.srcjsConsoleLines .color-5 {
 			color: #aa00aa;
 		}
-		.srcjsConsoleLines .color-36 {
+		.srcjsConsoleLines .color-6 {
+			color: #ffaa00;
+		}
+		.srcjsConsoleLines .color-7 {
+			color: #aaaaaa;
+		}
+		.srcjsConsoleLines .color-8 {
+			color: #555555;
+		}
+		.srcjsConsoleLines .color-9 {
+			color: #5555ff;
+		}
+		.srcjsConsoleLines .color-a {
+			color: #55ff55;
+		}
+		.srcjsConsoleLines .color-b {
 			color: #55ffff;
 		}
-		.srcjsConsoleLines .color-37 {
-			color: #fff;
+		.srcjsConsoleLines .color-c {
+			color: #ff5555;
 		}
-		.srcjsConsoleLines .color-38 {
-			color: #fff;
+		.srcjsConsoleLines .color-d {
+			color: #ff55ff;
+		}
+		.srcjsConsoleLines .color-e {
+			color: #ffff55;
+		}
+		.srcjsConsoleLines .color-f {
+			color: #ffffff;
+		}
+		
+		.srcjsConsoleLines .color-esc-31 {
+			color: #ff5555;
+		}
+		.srcjsConsoleLines .color-esc-32 {
+			color: #55ff55;
+		}
+		.srcjsConsoleLines .color-esc-33 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-34 {
+			background: white;
+			color: black;
+		}		
+		.srcjsConsoleLines .color-esc-35 {
+			color: #aa00aa;
+		}
+		.srcjsConsoleLines .color-esc-36 {
+			color: #55ffff;
+		}
+		.srcjsConsoleLines .color-esc-37 {
+			color: #ffffff;
+		}
+		.srcjsConsoleLines .color-esc-38 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-39 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-40 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-41 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-42 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-43 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-44 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-45 {
+			background: white;
+			color: black;
+		}
+		.srcjsConsoleLines .color-esc-46 {
+			background: white;
+			color: black;
 		}
 	.srcjsInput {
 	}
