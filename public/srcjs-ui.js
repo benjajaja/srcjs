@@ -334,7 +334,7 @@ srcjs.ui = (function() {
 			 */
 			box.addLines = function(data) {
 				var atBottom = false;
-				if (lineDiv[0].scrollHeight - lineDiv.scrollTop() == lineDiv.height()) {
+				if (lineDiv[0].scrollHeight - lineDiv.scrollTop() <= lineDiv.height()) {
 					atBottom = true;
 				}
 				
@@ -411,6 +411,35 @@ srcjs.ui = (function() {
 			lineDiv.css({height: height+'px'});
 			
 			return box;
+		},
+		
+		Dialog: function(options, spec) {
+			var dlg = $('<div/>').text(options.message);
+			options.autoOpen = typeof options.autoOpen != 'undefined' ? options.autoOpen : true;
+			dlg.dialog(options);
+		},
+		
+		DialogConfirm: function(options, spec) {
+			spec = spec || {};
+			
+			options.title = options.title || 'Confirm';
+			
+			var handler = options.onYes;
+			delete options.onYes;
+			
+			options.buttons = {
+				"Yes": function() {
+					handler();
+					$(this).dialog("close");
+				},
+				"No": function() {
+					$(this).dialog("close");
+				}
+			};
+			
+			var o = srcjs.ui.Dialog(options, spec);
+			
+			return o;
 		}
 	};
 	return ui;

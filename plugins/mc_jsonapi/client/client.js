@@ -120,10 +120,8 @@ srcjs.plugins.mc_jsonapi = (function() {
 					srcjs.plugins.mc_jsonapi.playerview.setPlayerData(data);
 				});
 				return {
-					element: srcjs.plugins.mc_jsonapi.playerview.panel(playerNames[index], playerNames, function(command, args) {
-						pluginio.emit('command', {command: command, args: args}, function(err) {
-							console.log('ran command '+command+': '+err);
-						});
+					element: srcjs.plugins.mc_jsonapi.playerview.panel(playerNames[index], playerNames, function(command, args, callback) {
+						pluginio.emit('command', {command: command, args: args}, callback);
 					}),
 					title: playerNames[index],
 					onRemove: function(callback) {
@@ -351,11 +349,6 @@ srcjs.plugins.mc_jsonapi = (function() {
 		pluginio.emit('chat', input);
 		var date = new Date();
 		date.setHours(date.getHours() + date.getTimezoneOffset()/60);
-		panel.onChat({
-			player: null,
-			message: input,
-			time: Math.floor(date.getTime() / 1000)
-		});
 	});
 	
 	panel.setConsoleInputListener(function(input) {

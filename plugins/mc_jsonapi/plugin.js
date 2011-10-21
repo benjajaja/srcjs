@@ -146,7 +146,7 @@ module.exports = function(eventBus, io, config, name) {
 	
 	pluginio.on('connection', function(socket) {
 		socket.on('chat', function(data) {
-			if (!json.runMethod('runConsoleCommand', ['say '+data])) {
+			if (!json.runMethod('broadcastWithName', [data, 'node.js'])) {
 				console.log('could not send chat command to socket');
 			}
 		});
@@ -158,10 +158,13 @@ module.exports = function(eventBus, io, config, name) {
 		
 		socket.on('command', function(data, callback) {
 			console.log('jsonapi command:', data);
+			json.once(data.command, function(data) {
+				callback(null, data);
+			});
 			if (!json.runMethod(data.command, data.args)) {
 				callback('could not run jsonapi command');
 			} else {
-				callback();
+				
 			}
 		})
 		

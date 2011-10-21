@@ -661,3 +661,25 @@ background: linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
 		.srcjsTable table th, .srcjsTable table td {
 			border: none;
 		}
+		
+.srcjsItem {
+	display: block;
+	position: relative;
+	width: 32px;
+}
+	.srjcsItemAmount {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		font-size: 0.75em;
+	}
+	.srjcsItemDurability {
+		display: block;
+		border: 1px solid #888;
+		height: 4px;
+	}
+		.srjcsItemDurabilityMeter {
+			display: block;
+			background-color: green;
+			height: 4px;
+		}
