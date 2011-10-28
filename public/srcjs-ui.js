@@ -110,6 +110,16 @@ srcjs.ui = (function() {
 			return o;
 		},
 		
+		TabPanel: function(options) {
+			var panel = $('<div class="srcjsTabPanel"/>');
+			if (options.className) {
+				options.className = options.className.charAt(0).toUpperCase() + options.className.substring(1);
+				panel.addClass('srcjs'+options.className);
+			}
+			
+			return panel;
+		},
+		
 		Table: function(options) {
 			var panel = $('<div class="srcjsTable"/>');
 			var header = $('<h4>').text(options.title);
@@ -156,6 +166,7 @@ srcjs.ui = (function() {
 			spec = spec || {};
 			spec.setTitle = spec.setTitle || function(title) {
 				titleBar.text(title);
+				addTitleButton();
 			};
 			spec.setTitleButton = spec.setTitleButton || function(icon, handler, text) {
 				text = text || titleBar.text();
@@ -163,6 +174,12 @@ srcjs.ui = (function() {
 				titleBar.append($('<a class="srcjsPanelTitleIcon srcjsPanelTitleIcon-'+icon+'"></a>').click(handler));
 				if (text) {
 					titleBar.append(text);
+				}
+			};
+			var addTitleButton = function() {
+				if (options.titleButton) {
+					spec.titleButton = $('<a class="srcjsPanelTitleIcon srcjsPanelTitleIconRight srcjsPanelTitleIcon-'+options.titleButton.icon+'"></a>').click(options.titleButton.handler);
+					titleBar.append(spec.titleButton);
 				}
 			};
 			var div = $('<div class="srcjsPanel srcjsRound"/>');
@@ -179,6 +196,7 @@ srcjs.ui = (function() {
 			if (options.title) {
 				titleBar.text(options.title);
 			}
+			addTitleButton();
 			div.append(titleBar);
 			
 			var footer = $('<h6 class="srcjsRoundBottom"/>');
@@ -190,7 +208,13 @@ srcjs.ui = (function() {
 				return div;
 			};
 			o.append = spec.append || function(element) {
+				if (typeof element != 'object') {
+					element = $(element);
+				}
 				element.insertBefore(footer);
+			};
+			o.setTitleIconBusy = function(busy) {
+				spec.titleButton[busy ? 'addClass' : 'removeClass']('srcjsPanelTitleIconBusy');
 			};
 			return o;
 		},
@@ -414,7 +438,12 @@ srcjs.ui = (function() {
 		},
 		
 		Dialog: function(options, spec) {
-			var dlg = $('<div/>').text(options.message);
+			var dlg = $('<div/>');
+			if (options.message) {
+				dlg.text(options.message);
+			} else if (options.panel) {
+				dlg.append(options.panel);
+			}
 			options.autoOpen = typeof options.autoOpen != 'undefined' ? options.autoOpen : true;
 			dlg.dialog(options);
 		},
@@ -430,10 +459,10 @@ srcjs.ui = (function() {
 			options.buttons = {
 				"Yes": function() {
 					handler();
-					$(this).dialog("close");
+					$(this).dialog("destroy");
 				},
 				"No": function() {
-					$(this).dialog("close");
+					$(this).dialog("destroy");
 				}
 			};
 			

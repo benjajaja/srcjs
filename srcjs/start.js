@@ -1,7 +1,7 @@
 var fs = require('fs');
 var cp = require('child_process');
 
-var start = function(options, pidFilename, stdoutCb, stderrCb, exitCb, cb) {
+module.exports = function(options, pidFilename, stdoutCb, stderrCb, exitCb, cb) {
 	var proc = cp.spawn(options.command,
 			options.arguments,
 			{
@@ -28,5 +28,3 @@ var start = function(options, pidFilename, stdoutCb, stderrCb, exitCb, cb) {
 		cb(new Exception('Cannot spawn process '+options.command));
 	}
 };
-
-module.exports = start;

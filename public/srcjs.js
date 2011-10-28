@@ -147,21 +147,13 @@ var srcjs = (function() {
 					consoleText('Process stopped with unknown exit code or was not running (anymore)', 'warn');
 				}
 			});
-			socket.on('unload', function(data) {
-				for(var name in srcjs.plugins) {
-					if (typeof srcjs.plugins[name].onUnload == 'function') {
-						try {
-							srcjs.plugins[name].onUnload();
-						} catch(e) {
-							window.console.log('error while unloading plugin '+name+':', e);
-						}
-					}
-				}
+			socket.on('unload', function() {
 				srcjs.plugins = {};
 				$('.srcjsTabs > button:gt(0)').remove();
 				$('.srcjsTabPanels > .srcjsTabPanel:gt(0)').remove();
 				tabs.splice(1);
-				socket.emit('unloaded');
+				
+				window.location.reload();
 			});
 			
 			
@@ -200,17 +192,7 @@ var srcjs = (function() {
 					height: 400
 				});
 				consolePanel.append(console.panel());
-				o.addTab('Process I/O', {
-					panel: function() {
-						return consolePanel;
-					},
-					show: function() {
-						consolePanel.show();
-					},
-					hide: function() {
-						consolePanel.hide();
-					}
-				}, true);
+				o.addTab('Process I/O', consolePanel, true);
 				tabs[0].tab.click();
 			})();
 			
@@ -227,7 +209,7 @@ var srcjs = (function() {
 			$('.srcjsTabs').append(tab);
 			
 			panel.hide();
-			$('.srcjsTabPanels').append(panel.panel);
+			$('.srcjsTabPanels').append(panel);
 			
 			tabs.push({
 				tab: tab,

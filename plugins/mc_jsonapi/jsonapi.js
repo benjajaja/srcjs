@@ -50,9 +50,8 @@ var createConnection = function(port, host, cb) {
 
 var closeConnection = function(socket) {
 	if (socket !== null) {
-		socket.removeAllListeners('data');
-		socket.removeAllListeners('end');
-		socket.removeAllListeners('error');
+		socket.removeAllListeners();
+		socket.close();
 		socket.destroy();
 	}
 };
@@ -109,7 +108,7 @@ var getQueue = (function(callback) {
 			processQueue(queue, callback);
 			isProcessing = false;
 		}
-	}
+	};
 });
 
 var JSONAPIConnection = function(host, port, username, password, salt, debug) {
@@ -150,7 +149,7 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 	
 	
 	
-	return {
+	var o = {
 		connect: function(timeout, retries, cb) {
 			if (debug) {
 				eventBus.emit('debug', 'connecting to '+host+':'+port+', '+retries+' retries...');
@@ -177,31 +176,6 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 						socket.on('data', function(data) {
 							queueData(data);
 						});
-						
-						/*socket.on('data', function(data) {
-							pushData(data, function(line) {
-								var result = null;
-								try {
-									result = JSON.parse(line);
-								} catch (e) {
-									onError('cannot parse JSON string ('+line+')', e);
-									return;
-								}
-								
-									
-								if (!result.result || result.result != 'success') {
-									onError('result is not "success"', result);
-									
-								} else if (!result.source || result.success === false) {
-									onError('result is "success", but "source" or "success" not set', result);
-									
-								} else {
-									eventBus.emit(result.source, result.success);
-								}
-								
-							});
-							
-						});*/
 						
 						socket.on('end', function(data) {
 							closeConnection(socket);
@@ -232,9 +206,9 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 				try {
 					socket.write(data);
 				} catch (e) {
-					return false;
+					return e;
 				}
-				return data;
+				return true;
 			} else {
 				return false;
 			}
@@ -244,7 +218,7 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 			if (socket !== null) {
 				var data = getLineSubscribe(channel, username, password, salt);
 				socket.write(data);
-				return data;
+				return true;
 			} else {
 				return false;
 			}
@@ -252,12 +226,17 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 		
 		unload: function() {
 			clearTimeout(timer);
-			eventBus = new EventBus(); // does this clear event listeners?
+			eventBus.removeAllListeners();
 			
 			if (socket !== null) {
+				socket.removeAllListeners();
 				closeConnection(socket);
 				socket = null;
 			}
+		},
+		
+		isConnected: function() {
+			return socket !== null;
 		},
 		
 		removeListener: function(event, listener) {
@@ -268,6 +247,7 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 			eventBus.removeAllListeners(event);
 		}
 	};
+	return o;
 };
 
 module.exports = JSONAPIConnection;

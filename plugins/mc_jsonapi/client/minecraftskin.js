@@ -875,7 +875,6 @@ vTextureCoord = aTextureCoord;\n\
 			return;
 		pauseAnimation();
 		canRotate = true;
-		skinpreview.style.cursor='move';
 
 		if (!e) e = window.event;
 		cursorThen = [e.clientX, e.clientY];
@@ -887,7 +886,6 @@ vTextureCoord = aTextureCoord;\n\
 			return;
 		resumeAnimation();
 		canRotate = false;
-		skinpreview.style.cursor='pointer';
 	}
 
 	function captureCursorLocation(e) {
@@ -1055,7 +1053,11 @@ vTextureCoord = aTextureCoord;\n\
 
 		skineditormc.save();
 		skineditormc.clearRect(0,0,64,32);
-		skineditormc.drawImage( img, 0, 0, 64, 32 );
+		try {
+			skineditormc.drawImage( img, 0, 0, 64, 32 );
+		} catch (e) {
+			console.log('minecraftskin exception:', e);
+		}
 		skineditormc.restore();
 
 		skineditorc.clearRect(0,0,512,256);

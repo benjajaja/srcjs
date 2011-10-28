@@ -2,34 +2,35 @@ var fs = require('fs');
 
 var plugins = [];
 
-var loadPlugin = function(eventBus, io, name, pluginConfig, cb) {
+var loadPlugin = function(pluginEventBus, io, name, pluginConfig, cb) {
 	fs.stat('./plugins/'+name, function(err, stat) {
+		var module = null;
 		if (err) {
 			console.error('plugin "'+name+'" not found');
 		} else if (stat.isDirectory()) {
 			try {
 				// load module and clear cache inmediately to be able to reload on HUP
-				var module = require.resolve('../plugins/'+name+'/plugin');
-				plugins.push(require(module)(eventBus, io, pluginConfig, name));
+				module = require.resolve('../plugins/'+name+'/'+name);
+				plugins.push(require(module)(pluginEventBus, io, pluginConfig, name));
 				delete require.cache[module];
 				
 				console.log('plugin "'+name+'" loaded');
 				cb();
 			} catch (e) {
 				cb(e);
-				console.error('Cannot load plugin '+name, e.stack); 
+				console.error('Cannot load plugin '+module, e.stack); 
 			}
 		}
 	});
 };
 
-module.exports.load = function(list, eventBus, app, io, config, cb) {
+module.exports.load = function(list, pluginEventBus, app, io, config, cb) {
 	// let plugins load additional client side code
-	eventBus.on('addscripts', function(scripts, pluginName) {
+	pluginEventBus.on('addscripts', function(scripts, pluginName) {
 		for(var i = 0; i < scripts.length; i++) {
 			(function(script) {
 				if (!script.filename) {
-					script.filename = 'client.js';
+					script.filename = pluginName+'.js';
 				}
 				
 				// do not add a route more than once
@@ -46,22 +47,28 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 						});
 						
 					});
-					console.log('plugin "'+pluginName+'" added route /plugins/'+script.plugin+'/'+script.filename);
+					console.log('added script /plugins/'+script.plugin+'/'+script.filename);
 				}
 			})(scripts[i]);
 		}
 		// load the client script on users when they join
-		eventBus.on('userjoin', function(socket) {
-			socket.emit('loadscript', scripts);
+		pluginEventBus.on('userjoin', function(socket) {
+			if (socket) {
+				console.log('sending loadscript to a client');
+				socket.emit('loadscript', scripts);
+			} else {
+				console.log('sending loadscript to ALL clients');
+				io.of('/console').emit('loadscript', scripts);
+			}
 		});
 	});
-	eventBus.on('addroutes', function(routes, pluginName) {
+	pluginEventBus.on('addroutes', function(routes, pluginName) {
 		for(var i = 0; i < routes.length; i++) {
 			(function(route) {
 				if (app.lookup.get('/plugins/'+route.plugin+'/'+route.path).length == 0) {
 					app.get('/plugins/'+route.plugin+'/'+route.path, route.callback);
 				}
-				console.log('plugin "'+pluginName+'" added route /plugins/'+route.plugin+'/'+route.path);
+				console.log('added route /plugins/'+route.plugin+'/'+route.path);
 			})(routes[i]);
 		}
 	});
@@ -69,7 +76,7 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 	// now load all plugins
 	(function loadPluginEach(i) {
 		var pluginConfig = config ? config[list[i]] : null;
-		loadPlugin(eventBus, io, list[i], pluginConfig, function(err) {
+		loadPlugin(pluginEventBus, io, list[i], pluginConfig, function(err) {
 		
 			if (i < list.length - 1) {
 				loadPluginEach(++i);
@@ -80,17 +87,17 @@ module.exports.load = function(list, eventBus, app, io, config, cb) {
 	})(0);
 };
 
-module.exports.unload = function(eventBus, cb) {
+module.exports.unload = function(pluginEventBus, cb) {
 	if (plugins.length == 0) {
 		cb();
 	}
 	var removePluginEventBusListeners = function() {
-		eventBus.removeAllListeners('procstart');
-		eventBus.removeAllListeners('procstop');
-		eventBus.removeAllListeners('connection');
-		eventBus.removeAllListeners('userjoin');
-		eventBus.removeAllListeners('addscripts');
-		eventBus.removeAllListeners('addroutes');
+		pluginEventBus.removeAllListeners('procstart');
+		pluginEventBus.removeAllListeners('procstop');
+		pluginEventBus.removeAllListeners('connection');
+		pluginEventBus.removeAllListeners('userjoin');
+		pluginEventBus.removeAllListeners('addscripts');
+		pluginEventBus.removeAllListeners('addroutes');
 		// TODO: remove app routes too!
 	};
 	var unload = function(index) {
@@ -119,7 +126,7 @@ module.exports.unload = function(eventBus, cb) {
 				cb(plugins);
 			}
 		}
-	}
+	};
 	unload(0);
 	
 };

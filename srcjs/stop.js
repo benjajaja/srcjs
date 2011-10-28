@@ -70,7 +70,7 @@ var executeStopStep = function(proc, stop, filename, isWindows, cb) {
 	}
 };
 
-var stop = function(proc, options, cb) {
+module.exports = function(proc, options, cb) {
 	var index = 0, timeout = null;
 	
 	if (proc !== null) {
@@ -117,5 +117,3 @@ var stop = function(proc, options, cb) {
 		cb(e);
 	}
 };
-
-module.exports = stop;

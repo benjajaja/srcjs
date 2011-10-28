@@ -177,7 +177,9 @@ html, body {
 			-moz-box-shadow: none;
 			box-shadow: none;
 		}
-
+	.srcjs input[type=number] {
+		width: 36px;
+	}
 .srcjsRound {
 	-moz-border-radius: .6em;
 	border-radius: .6em;
@@ -208,15 +210,37 @@ html, body {
 	background: rgba(0, 0, 0, .4);
 	background-image: url(icons.png);
 	background-repeat: no-repeat;
+	background-position: 0px -22px;
 	-moz-border-radius: 9px;
 	border-radius: 9px;
 	-moz-box-shadow: 0 1px 0 rgba(255,255,255,.4);
 	box-shadow: 0 1px 0 rgba(255,255,255,.4);
-	margin: 0 10px -3px -10px;
+	margin: 0 10px -3px 0px;
 	cursor: pointer;
 }
+	@-webkit-keyframes rotate {
+	  from {
+	    -webkit-transform: rotate(360deg);
+	  }
+	  to { 
+	    -webkit-transform: rotate(0deg);
+	  }
+	}
+	.srcjsPanelTitleIconBusy {
+		-webkit-animation-name: rotate;
+	    -webkit-animation-duration: 0.25s;
+	    -webkit-animation-iteration-count: infinite;
+	    -webkit-animation-timing-function: linear;
+	    -moz-transform: scale(0.8);
+	}
+	.srcjsPanelTitleIconRight {
+		float: right;
+	}
 	.srcjsPanelTitleIcon-back {
 		background-position: 0px -22px;
+	}
+	.srcjsPanelTitleIcon-reload {
+		background-position: -96px -22px;
 	}
 .srcjsPanel {
 	background-color: #fff;
@@ -228,7 +252,7 @@ html, body {
 		color: white;
 		text-shadow: 0 -1px 1px #254F7A;
 		margin: 0;
-		padding: .5em 15px;
+		padding: .5em 0 15px .5em;
 		font-size: 14px;
 		font-weight: bold;
 		background-image: -webkit-linear-gradient(top,#81a8ce,#5e87b0);

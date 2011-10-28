@@ -1,4 +1,70 @@
 srcjs.plugins.mc_jsonapi.playerview = (function() {
+	var commandCallback;
+	
+	var openItem = function(name, item, slot) {
+		var panel = srcjs.ui.SplitPanel();
+		
+		var left = $('<div/>');
+		var preview = srcjs.plugins.mc_jsonapi.items.getFullIcon(item.type, item.durability, item.amount);
+		left.append(preview);
+		panel.append(left);
+		
+		var right = $('<div/>');
+		
+		var inputAmount = $('<input type="number" min="1" max="64"/>').val(item.amount);
+		var onChangeAmount = function() {
+			var amount = parseInt(inputAmount.val());
+			if (!isNaN(amount)) {
+				preview.data('setAmount')(amount);
+			}
+		};
+		inputAmount.change(onChangeAmount);
+		inputAmount.keyup(onChangeAmount);
+		inputAmount.mouseup(onChangeAmount);
+		right.append($('<label>').text('Amount: ').append(inputAmount));
+		
+		var inputType = $('<input type="number" min="1" max="512"/>').val(item.type);
+		var onChangeType = function() {
+			var type = parseInt(inputType.val());
+			if (!isNaN(type)) {
+				preview.data('setType')(type, item.durability);
+			}
+		};
+		inputType.change(onChangeType);
+		inputType.keyup(onChangeType);
+		inputType.mouseup(onChangeType);
+		var labelType = $('<label>').text('Type: ').append(inputType);
+		labelType.append($('<button/>').click(function() {
+			
+		}).append('<span class="srcjsIcon srcjsIconFind"/>'));
+		right.append(labelType);
+		
+		panel.append(right);
+		
+		srcjs.ui.Dialog({
+			panel: panel.panel,
+			buttons: {
+				"Set": function() {
+					var dlg = $(this);
+					var amount = parseInt(inputAmount.val());
+					if (!isNaN(amount)) {
+						var type = parseInt(inputType.val());
+						if (!isNaN(type)) {
+							commandCallback('setPlayerInventorySlotWithDamage', [name, slot, type, item.durability, amount], function(err, result) {
+								console.log(err, result);
+								dlg.dialog("destroy");
+							});
+						}
+					}
+				},
+				"Cancel": function() {
+					$(this).dialog("destroy");
+				}
+			} 
+		});
+	};
+	
+	
 	var panel = $('<div/>');
 	
 	var splitTop = srcjs.ui.SplitPanel();
@@ -40,51 +106,11 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 	});
 	panel.append(inventory.panel);
 	
-	function getDurabilityPercent(type, durability) {
-		var max = null;
-		switch(type) {
-			case 276: // diamond
-			case 277:
-			case 278:
-			case 279:
-			case 293: max = 1562;
-		break;
-			case 256: // iron
-			case 257:
-			case 258:
-			case 267:
-			case 292: max = 251;
-		break;
-			case 272: // stone
-			case 273:
-			case 274:
-			case 275:
-			case 291: max = 132;
-		break;
-			case 268: // wood
-			case 269:
-			case 270:
-			case 271:
-			case 290: max = 60;
-		break;
-			case 283: // gold
-			case 284:
-			case 285:
-			case 286:
-			case 294: max = 33;
-		break;
-			
-		}
-		if (max === null) {
-			return null;
-		} else {
-			return (100 * (max - durability) / max).toFixed(2);
-		}
-	}
+	
 	
 	return {
-		panel: function(playername, otherPlayers, commandCallback) {
-			
+		panel: function(playername, otherPlayers, newCommandCallback) {
+			commandCallback = newCommandCallback;
 			pnlSkin.html(srcjs.plugins.mc_jsonapi.minecraftskin.panel(playername));
 			
 			inputTeleportToPlayer.html('');
@@ -150,10 +176,15 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		},
 		
 		setPlayerData: function(data) {
+			var getClickHandler = function(name, item, slot) {
+				return function() {
+					openItem(name, item, slot);
+				};
+			};
 			if (data === null) {
 				return;
 			}
-			var row;
+			var row = null;
 			for(var i = 0; i < data.inventory.inventory.length; i++) {
 				if (i % 9 == 0) {
 					if (row) {
@@ -163,18 +194,12 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 				}
 				
 				if (data.inventory.inventory[i] !== null) {
-					var item = $('<span class="srcjsItem"/>');
-					item.append(srcjs.plugins.mc_jsonapi.getItemIcon(data.inventory.inventory[i].type, data.inventory.inventory[i].durability));
-					if (data.inventory.inventory[i].type > 255 && data.inventory.inventory[i].durability > 0) {
-						var percent = getDurabilityPercent(data.inventory.inventory[i].type, data.inventory.inventory[i].durability);
-						if (percent !== null) {
-							item.append('<span class="srjcsItemDurability"><span class="srjcsItemDurabilityMeter" title="'+data.inventory.inventory[i].durability+'" style="width: '+percent+'%"/></span>');
-						}
-					}
-					if (data.inventory.inventory[i].amount > 1) {
-						item.append('<span class="srjcsItemAmount">'+data.inventory.inventory[i].amount+'</span>');
-					}
+					var item = srcjs.plugins.mc_jsonapi.items.getFullIcon(data.inventory.inventory[i].type,
+							data.inventory.inventory[i].durability, data.inventory.inventory[i].amount);
+					item.css({cursor: 'pointer'});
 					row.push(item);
+
+					item.click(getClickHandler(data.name, data.inventory.inventory[i], i));
 				} else {
 					row.push($('<img src="clear.gif" width="32" height="32"/>'));
 				}
@@ -183,3 +208,4 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		}
 	};
 })();
+

@@ -1,6 +1,9 @@
 var http = require('http');
 
 var downloadSkin = function(url, response, logCallback) {
+	if (typeof logCallback == 'undefined') {
+		logCallback = function() {};
+	}
 	var options = {
 		host: url.substring(0, url.indexOf('/')),
 		port: 80,
