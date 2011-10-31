@@ -122,6 +122,9 @@ srcjs.ui = (function() {
 		
 		Table: function(options) {
 			var panel = $('<div class="srcjsTable"/>');
+			if (options.className) {
+				panel.addClass(options.className);
+			}
 			var header = $('<h4>').text(options.title);
 			panel.append(header);
 			var table = $('<table/>');
@@ -149,6 +152,11 @@ srcjs.ui = (function() {
 						}
 					}
 					table.append(tr);
+				},
+				setCell: function(row, column, data) {
+					var td = table.find('tr').eq(row).find('td').eq(column);
+					td.html('');
+					td.append(data);
 				},
 				clear: function() {
 					table.html('');

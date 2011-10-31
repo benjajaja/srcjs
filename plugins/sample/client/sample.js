@@ -20,15 +20,18 @@ srcjs.plugins.sample = (function() {
 	var box = srcjs.ui.Box({title: 'A sample plugin'});
 	panel.append(box.panel);
 	
-	// let's communicate something useless, in all eternity!
-	setInterval(function() {
-		pluginio.emit('myclientevent', {anObject: 'tuuut tuuuut'});
-	}, 10000);
-	pluginio.emit('myclientevent', {anObject: '¿qué habeis comío?'});
+	var content = $('<div class="srcjsPanelBody"/>');
+	box.append(content);
+	
+	var textarea = $('<textarea/>').css({display: 'block'});
+	content.append($('<button/>').text('Send "Is anybody there?" to plugin backend').click(function() {
+		pluginio.emit('myclientevent', {message: "Is anybody there?"});
+	}));
+	content.append(textarea);
 	
 	// let's react to socket.io events from our plugin
 	pluginio.on('myserverevent', function(data) {
-		box.append($('<span/>').text(data.property));
+		textarea.val(data.message);
 	});
 	
 	// we must add our self to the tab list if we have an UI

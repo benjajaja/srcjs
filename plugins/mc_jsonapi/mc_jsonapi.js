@@ -179,6 +179,26 @@ module.exports = function(eventBus, io, config, name) {
 		});
 	});
 	
+	eventBus.on('mc_jsonapi.run', function(command) {
+		var run = (function(command) {
+			return function() {
+				var result = json.runMethod(command.command, command.args);
+				if (result === true) {
+					json.once(command.command, command.callback);
+				} else {
+					console.log('eventBus: could not run '+command.command, result);
+				}
+			};
+		})(command);
+		if(json.isConnected()) {
+			run();
+			
+		} else {
+			console.log('someone wants '+command.command+', but jsonapi is not connected, rerun in 1 second...');
+			setTimeout(run, 1000);
+		}
+	});
+	
 	// must return object with property "unload" being a function with a callback as argument.
 	// said callback has an optional "error" argument.
 	// eventbus listeners are automatically removed.

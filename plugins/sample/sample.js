@@ -22,7 +22,7 @@
  * 				There you go!
  * 
  * 		List of emittable events:
- * 			"stdin": write the string you passed along to the process' stdin
+ * 			"stdin": Write the string you passed along to the process' stdin.
  * 			"OTHERPLUGINNAME.THEIREVENTNAME": Want to tell something to another plugin? There you go!
  * 
  * io: use
@@ -71,9 +71,7 @@ module.exports = function(eventBus, io, config, name) {
 		
 		// let's make up some useless communication
 		socket.on('myclientevent', function(data) {
-			// console.log('myclientevent:', data);
-			// client sent "myclientevent"! let's answer with something:
-			socket.emit('myserverevent', {property: config.sampleProperty});
+			socket.emit('myserverevent', {message: 'Please help me, I\'m trapped!'});
 		});
 	});
 	/**

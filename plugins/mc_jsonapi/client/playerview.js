@@ -1,17 +1,37 @@
 srcjs.plugins.mc_jsonapi.playerview = (function() {
 	var commandCallback;
 	
-	var openItem = function(name, item, slot) {
+	var getItem = function(data) {
+		if (data !== null) {
+			item = srcjs.plugins.mc_jsonapi.items.getFullIcon(data.type,
+					data.durability, data.amount);
+
+		} else {
+			item = $('<img src="clear.gif" width="32" height="32"/>');
+			
+		}
+		return item;
+	};
+	
+	var openItem = function(name, item, slot, callback) {
 		var panel = srcjs.ui.SplitPanel();
+		
+		if (item === null) {
+			item = {
+				type: 0,
+				durability: 0,
+				amount: 0
+			};
+		}
 		
 		var left = $('<div/>');
 		var preview = srcjs.plugins.mc_jsonapi.items.getFullIcon(item.type, item.durability, item.amount);
 		left.append(preview);
 		panel.append(left);
 		
-		var right = $('<div/>');
+		var right = srcjs.ui.Table({title: 'Item data', className: 'srcjsPanelBody'});
 		
-		var inputAmount = $('<input type="number" min="1" max="64"/>').val(item.amount);
+		var inputAmount = $('<input type="number" min="0" max="64"/>').val(item.amount);
 		var onChangeAmount = function() {
 			var amount = parseInt(inputAmount.val());
 			if (!isNaN(amount)) {
@@ -21,9 +41,9 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		inputAmount.change(onChangeAmount);
 		inputAmount.keyup(onChangeAmount);
 		inputAmount.mouseup(onChangeAmount);
-		right.append($('<label>').text('Amount: ').append(inputAmount));
+		right.addRow($('<label>').text('Amount:'), inputAmount);
 		
-		var inputType = $('<input type="number" min="1" max="512"/>').val(item.type);
+		var inputType = $('<input type="number" min="0" max="512"/>').val(item.type);
 		var onChangeType = function() {
 			var type = parseInt(inputType.val());
 			if (!isNaN(type)) {
@@ -33,13 +53,12 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		inputType.change(onChangeType);
 		inputType.keyup(onChangeType);
 		inputType.mouseup(onChangeType);
-		var labelType = $('<label>').text('Type: ').append(inputType);
-		labelType.append($('<button/>').click(function() {
+		/*labelType.append($('<button/>').click(function() {
 			
-		}).append('<span class="srcjsIcon srcjsIconFind"/>'));
-		right.append(labelType);
+		}).append('<span class="srcjsIcon srcjsIconFind"/>'));*/
+		right.addRow($('<label>').text('Type: '), inputType);
 		
-		panel.append(right);
+		panel.append(right.panel);
 		
 		srcjs.ui.Dialog({
 			panel: panel.panel,
@@ -51,7 +70,9 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 						var type = parseInt(inputType.val());
 						if (!isNaN(type)) {
 							commandCallback('setPlayerInventorySlotWithDamage', [name, slot, type, item.durability, amount], function(err, result) {
-								console.log(err, result);
+								if (!err && result && typeof callback == 'function') {
+									callback(slot, type, item.durability, amount);
+								}
 								dlg.dialog("destroy");
 							});
 						}
@@ -60,7 +81,8 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 				"Cancel": function() {
 					$(this).dialog("destroy");
 				}
-			} 
+			},
+			width: 460
 		});
 	};
 	
@@ -176,9 +198,24 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		},
 		
 		setPlayerData: function(data) {
+			var item;
 			var getClickHandler = function(name, item, slot) {
 				return function() {
-					openItem(name, item, slot);
+					openItem(name, item, slot, function(slot, type, durability, amount) {
+						var data = null
+						if (type != 0 && amount != 0) {
+							data = {
+								type: type,
+								durability: durability,
+								amount: amount
+							};
+						}
+						item = getItem(data);
+
+						item.css({cursor: 'pointer'});
+						item.click(getClickHandler(name, data, slot));
+						inventory.setCell(Math.floor(slot / 9), slot % 9, item);
+					});
 				};
 			};
 			if (data === null) {
@@ -193,16 +230,11 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 					row = [];
 				}
 				
-				if (data.inventory.inventory[i] !== null) {
-					var item = srcjs.plugins.mc_jsonapi.items.getFullIcon(data.inventory.inventory[i].type,
-							data.inventory.inventory[i].durability, data.inventory.inventory[i].amount);
-					item.css({cursor: 'pointer'});
-					row.push(item);
-
-					item.click(getClickHandler(data.name, data.inventory.inventory[i], i));
-				} else {
-					row.push($('<img src="clear.gif" width="32" height="32"/>'));
-				}
+				item = getItem(data.inventory.inventory[i]);
+				
+				item.css({cursor: 'pointer'});
+				item.click(getClickHandler(data.name, data.inventory.inventory[i], i));
+				row.push(item);
 			}
 			inventory.addRow(row);
 		}

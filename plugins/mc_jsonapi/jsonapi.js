@@ -51,7 +51,7 @@ var createConnection = function(port, host, cb) {
 var closeConnection = function(socket) {
 	if (socket !== null) {
 		socket.removeAllListeners();
-		socket.close();
+		socket.end();
 		socket.destroy();
 	}
 };
@@ -229,7 +229,6 @@ var JSONAPIConnection = function(host, port, username, password, salt, debug) {
 			eventBus.removeAllListeners();
 			
 			if (socket !== null) {
-				socket.removeAllListeners();
 				closeConnection(socket);
 				socket = null;
 			}
