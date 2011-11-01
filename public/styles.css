@@ -242,6 +242,9 @@ html, body {
 	.srcjsPanelTitleIcon-reload {
 		background-position: -96px -22px;
 	}
+	.srcjsPanelTitleIcon-close {
+		background-position: -64px -22px;
+	}
 .srcjsPanel {
 	background-color: #fff;
 }
@@ -706,4 +709,20 @@ background: linear-gradient(top, #eeeeee 0%,#e2e2e2 100%);
 			display: block;
 			background-color: green;
 			height: 4px;
+		}
+		
+.srjsDialog {
+	position: absolute;
+	top: 0;
+	left: 0
+}
+	.srjcDialogText {
+		padding: 5px;
+	}
+	.srcjsDialogButtons {
+		padding: 5px;
+		text-align: right;
+	}
+		.srcjsDialogButtons button {
+			margin-left: 5px;
 		}

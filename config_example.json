@@ -1,22 +1,27 @@
 {
 	"port": 80,
 	"process": {
-		"chdir": "../srcds/css/orangebox",
-		"command": "./srcds_run",
-		"arguments": ["-console", "-game css", "+map de_dust2", "+maxplayers 16", "-autoupdate", "-norestart", "-port 27015"],
-		"setsid": true,
-		"ioInterval": 2000,
-		"stop": [
-			{"input": "say SERVER RESTART FROM CONSOLE, 3"},
-			{"input": "say SERVER RESTART FROM CONSOLE, 2", "timeout": 1000},
-			{"input": "say SERVER RESTART FROM CONSOLE, 1", "timeout": 1000},
-			{"input": "say SERVER RESTART FROM CONSOLE, 0", "timeout": 1000},
-			{"input": "quit"},
-			{"signal": 9, "timeout": 5000}
-		]
+			"chdir": "../minecraft",
+			"command": "java",
+			"arguments": [
+					"-Xmx3072M",
+					"-Xms1536M",
+					"-jar",
+					"craftbukkit-0.0.1-SNAPSHOT.jar"
+			],
+			"setsid": true,
+			"ioInterval": 0,
+			"stop": [
+					{"input": "say SERVER RESTART FROM CONSOLE, saving..."},
+					{"input": "save-all"},
+					{"input": "say ...done, sending stop...", "timeout": 2000},
+					{"input": "stop"},
+					{"input": "say ...sending kill signal... bye bye!", "timeout": 2000},
+					{"signal": 9, "timeout": 20000}
+			]
 	},
 	"pidFilename": "proc.pid",
-	"plugins": ["srcrcon"],
+	"plugins": ["mc_jsonapi"],
 	"plugin": {
 		"srcrcon": {
 			"password": "yourRconPassword"
@@ -27,6 +32,9 @@
 			"username": "setUsername",
 			"password": "setPassword",
 			"salt": "your salt"
+		},
+		"sample": {
+			"sampleProperty": "¡caracoles con sopa de río!"
 		}
 	}
 }

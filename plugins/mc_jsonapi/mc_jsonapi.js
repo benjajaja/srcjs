@@ -136,10 +136,14 @@ module.exports = function(eventBus, io, config, name) {
 		
 		socket.on('command', function(data, callback) {
 			json.once(data.command, function(data) {
-				callback(null, data);
+				if (callback) {
+					callback(null, data);
+				}
 			});
 			if (!json.runMethod(data.command, data.args)) {
-				callback('could not run jsonapi command');
+				if (callback) {
+					callback('could not run jsonapi command');
+				}
 			} else {
 				
 			}

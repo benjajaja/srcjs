@@ -29,7 +29,8 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		left.append(preview);
 		panel.append(left);
 		
-		var right = srcjs.ui.Table({title: 'Item data', className: 'srcjsPanelBody'});
+		var right = srcjs.ui.Table({title: 'Item data', css: {
+		}});
 		
 		var inputAmount = $('<input type="number" min="0" max="64"/>').val(item.amount);
 		var onChangeAmount = function() {
@@ -60,30 +61,31 @@ srcjs.plugins.mc_jsonapi.playerview = (function() {
 		
 		panel.append(right.panel);
 		
-		srcjs.ui.Dialog({
-			panel: panel.panel,
-			buttons: {
-				"Set": function() {
-					var dlg = $(this);
-					var amount = parseInt(inputAmount.val());
-					if (!isNaN(amount)) {
-						var type = parseInt(inputType.val());
-						if (!isNaN(type)) {
-							commandCallback('setPlayerInventorySlotWithDamage', [name, slot, type, item.durability, amount], function(err, result) {
-								if (!err && result && typeof callback == 'function') {
-									callback(slot, type, item.durability, amount);
-								}
-								dlg.dialog("destroy");
-							});
+		var options = {
+				panel: panel.panel,
+				buttons: {
+					"Set": function() {
+						var dlg = $(this);
+						var amount = parseInt(inputAmount.val());
+						if (!isNaN(amount)) {
+							var type = parseInt(inputType.val());
+							if (!isNaN(type)) {
+								commandCallback('setPlayerInventorySlotWithDamage', [name, slot, type, item.durability, amount], function(err, result) {
+									if (!err && result && typeof callback == 'function') {
+										callback(slot, type, item.durability, amount);
+									}
+									options.close();
+								});
+							}
 						}
+					},
+					"Cancel": function() {
+						options.close();
 					}
 				},
-				"Cancel": function() {
-					$(this).dialog("destroy");
-				}
-			},
-			width: 460
-		});
+				width: 460
+			};
+		srcjs.ui.Dialog(options);
 	};
 	
 	

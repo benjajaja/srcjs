@@ -446,14 +446,52 @@ srcjs.ui = (function() {
 		},
 		
 		Dialog: function(options, spec) {
-			var dlg = $('<div/>');
-			if (options.message) {
-				dlg.text(options.message);
-			} else if (options.panel) {
-				dlg.append(options.panel);
+			spec = spec || {};
+			var dlg = srcjs.ui.Box({
+				title: options.title ? options.title : 'Message',
+				classNames: ['srjsDialog'],
+				titleButton: {
+					icon: "close",
+					handler: function() {
+						spec.close();
+					}
+				},
+				css: {
+					width: options.width ? options.width : '400px'
+				}
+			});
+			spec.close = function() {
+				dlg.panel().remove();
+			};
+			if (!options.close) {
+				options.close = spec.close;
 			}
-			options.autoOpen = typeof options.autoOpen != 'undefined' ? options.autoOpen : true;
-			dlg.dialog(options);
+			
+			var msg = $('<div class="srcjsPanelBody"/>');
+
+			if (options.message) {
+				msg.addClass('srjcDialogText');
+				msg.text(options.message);
+			} else if (options.panel) {
+				msg.append(options.panel);
+			}
+			dlg.append(msg);
+			
+			var pnlButtons = $('<div class="srcjsPanelBody srcjsDialogButtons"/>');
+			for(var key in options.buttons) {
+				(function(handler, name) {
+					pnlButtons.append($('<button/>').text(key).click(handler));
+				})(options.buttons[key], key);
+			}
+			dlg.append(pnlButtons);
+			
+			$('.srcjs').append(dlg.panel());
+			
+			dlg.panel().css({"top": (($(window).height() - dlg.panel().outerHeight()) / 2) + $(window).scrollTop() + "px"});
+			dlg.panel().css({"left": (($(window).width() - dlg.panel().outerWidth()) / 2) + $(window).scrollLeft() + "px"});
+			
+			
+			
 		},
 		
 		DialogConfirm: function(options, spec) {
@@ -467,10 +505,10 @@ srcjs.ui = (function() {
 			options.buttons = {
 				"Yes": function() {
 					handler();
-					$(this).dialog("destroy");
+					spec.close();
 				},
 				"No": function() {
-					$(this).dialog("destroy");
+					spec.close();
 				}
 			};
 			
